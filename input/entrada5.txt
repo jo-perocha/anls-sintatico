@@ -1,0 +1,29 @@
+% Tô declarando: %% uma String %
+cadeia a = "é isso mesmo";
+
+% isso é um comentario de bloco {#
+Este é o comentario de bloco
+#}
+
+% novo valor de a
+
+a = " opa, beleza?
+escreva(a)
+
+{# b terá o valor da resposta de a#}
+
+b = "Tudo certo \n"
+escreva('b')
+
+% outra vez a:
+
+a = " Serio?
+"
+escreva('aa')
+
+{# 
+por ultimo b:
+
+
+b = vazio
+escreva(b)

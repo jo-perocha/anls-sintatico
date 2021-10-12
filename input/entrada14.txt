@@ -1,0 +1,13 @@
+cadeia = leia("\"Escreva isso\"");
+se(cadeia=="\"Escreva isso\""){
+    char = leia("Voce escreveu certo?\n[s = sim e n = nao]");
+    se(char=='s'){
+        escreva("Parabens! voce acertou");  
+    }
+    entao{
+        escreva("voce errou, que pena");  
+    }
+}
+entao{
+    escreva("era pra escrever isso: \"Escreva isso\"");
+}

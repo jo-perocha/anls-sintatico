@@ -1,0 +1,46 @@
+1 IDE exemplo 
+1 IDE teste 
+1 DEL ; 
+1 comentario de linha 
+2 DEL { 
+2 ART + 
+2 ART - 
+2 DEL } 
+3 PRE real 
+3 IDE f 
+3 REL = 
+3 ART - 
+3 NRO 3.5 
+3 DEL ; 
+4 NRO 35 
+6 PRE cadeia 
+6 IDE msg_1 
+6 REL = 
+8 PRE se 
+8 DEL ( 
+8 IDE f 
+8 REL >= 
+8 ART - 
+8 NRO 10 
+8 DEL ) 
+8 LOG && 
+8 DEL ( 
+8 IDE f 
+8 REL < 
+8 DEL ) 
+9 PRE escreva 
+9 DEL ( 
+11 comentario de bloco 
+15 PRE inteiro 
+15 IDE a 
+15 REL = 
+15 CAR 'b' 
+15 CAD "etc" 
+15 DEL ; 
+
+4 SIB @ 
+6 CMF "teste . 
+9 CMF "mensagem ); 
+10 SIB @ 
+14 SIB # 
+17 CoMF {#      !--; 

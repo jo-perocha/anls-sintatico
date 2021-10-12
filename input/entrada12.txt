@@ -1,0 +1,14 @@
+se (identificador_ == verdadeiro){
+    a =2 + 2 - 3 * 3 /5.5 / 3.2.;
+    a++;
+    a --;
+}
+%comentario
+enquanto (a >= 2.3 && a <=33 || a = 124.456){
+    "cadeia de caracteres"
+    {#comentario de bloco mal formado
+    
+    
+    }
+}
+list[2] == a;

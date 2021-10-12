@@ -1,0 +1,35 @@
+{#
+	código para cálculo de IMC
+	autor: 
+#}
+real height;
+real weight;
+
+% Recebe valores do usuário
+escreva("Digite sua altura: ");
+height = leia()
+escreva("Digite seu peso: ");
+weight = leia()
+
+% Calcula IMC
+real bmi =  weight / (height * height)
+escreva("Seu IMC é: " + bmi)
+
+% Imprime status do usuário
+se(bmi < 16) {
+	escreva("Magreza grave")
+} senao se(bmi < 17) {
+	escreva("Magreza moderada")
+} senao se(bmi < 18.5) {
+	escreva("Magreza leve") 
+} senao se(bmi < 25) {
+	escreva("Saudável")
+} senao se(bmi < 30) {
+	escreva("Sobrepeso)
+} senao se(bmi < 35) {
+	escreva("Obesidade Grau I")
+} senao se(bmi < 40) {
+	escreva("Obesidade Grau II (severa)")
+} senao {
+	escreva("Obesidade Grau III (mórbida)")
+}

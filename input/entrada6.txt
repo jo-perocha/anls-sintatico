@@ -1,0 +1,14 @@
+se (verdadeiro){
+    a =2 + 2.d. - 3 * 3 /5.5 / 3.2sa;
+}
+%comentario
+enquanto (a =< 2.3 && a &=33 | a = 124.456){
+    stra = "cadeia de caracte"
+    strb = "cadeia mal formada
+    strc = "cad'"
+    cada = '"'
+    cadb = 'cad'
+    cadc = 'c
+}
+@
+list[2] == a;

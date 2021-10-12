@@ -1,0 +1,28 @@
+inteiro a = 10
+outro_inteiro b = 5
+
+escreva(a+b)
+escreva(a-b)
+escreva(a/b)
+escreva(a*b)
+escreva(a++)
+escreva(b--)
+
+se ( a > b && a > 10 ) {
+    escreva("aaaa")
+}
+se ( a < b & a < 10 ) {
+    escreva("bbbb")
+}
+se ( a >= b || a >= 10 ) {
+    escreva("cccc")
+}
+se ( a <= b | a <= 10 ) {
+    escreva("dddd")
+}
+se ( a == b ) {
+    escreva("eeee")
+}
+se ( a = b ) {
+    escreva("ffff")
+}

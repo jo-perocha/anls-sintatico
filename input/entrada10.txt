@@ -1,0 +1,16 @@
+variaveis (
+    real a, b, soma;
+)
+
+funcao somaAB (primeiro, segundo) {
+    retorno primeiro + segundo;
+}
+
+funcao algoritmo () {
+    escreva("Primeiro valor: ");
+    leia(a);
+    escreva("Segundo valor: ");
+    leia(b);
+    soma = somaAB(a, b);
+    escreva(soma);
+}

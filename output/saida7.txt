@@ -1,0 +1,143 @@
+1 comentario de bloco 
+5 PRE real 
+5 IDE height 
+5 DEL ; 
+6 PRE real 
+6 IDE weight 
+6 DEL ; 
+8 comentario de linha 
+9 PRE escreva 
+9 DEL ( 
+9 CAD "Digite sua altura: " 
+9 DEL ) 
+9 DEL ; 
+10 IDE height 
+10 REL = 
+10 PRE leia 
+10 DEL ( 
+10 DEL ) 
+11 PRE escreva 
+11 DEL ( 
+11 CAD "Digite seu peso: " 
+11 DEL ) 
+11 DEL ; 
+12 IDE weight 
+12 REL = 
+12 PRE leia 
+12 DEL ( 
+12 DEL ) 
+14 comentario de linha 
+15 PRE real 
+15 IDE bmi 
+15 REL = 
+15 IDE weight 
+15 ART / 
+15 DEL ( 
+15 IDE height 
+15 ART * 
+15 IDE height 
+15 DEL ) 
+16 PRE escreva 
+16 DEL ( 
+16 ART + 
+16 IDE bmi 
+16 DEL ) 
+18 comentario de linha 
+19 PRE se 
+19 DEL ( 
+19 IDE bmi 
+19 REL < 
+19 NRO 16 
+19 DEL ) 
+19 DEL { 
+20 PRE escreva 
+20 DEL ( 
+20 CAD "Magreza grave" 
+20 DEL ) 
+21 DEL } 
+21 PRE senao 
+21 PRE se 
+21 DEL ( 
+21 IDE bmi 
+21 REL < 
+21 NRO 17 
+21 DEL ) 
+21 DEL { 
+22 PRE escreva 
+22 DEL ( 
+22 CAD "Magreza moderada" 
+22 DEL ) 
+23 DEL } 
+23 PRE senao 
+23 PRE se 
+23 DEL ( 
+23 IDE bmi 
+23 REL < 
+23 NRO 18.5 
+23 DEL ) 
+23 DEL { 
+24 PRE escreva 
+24 DEL ( 
+24 CAD "Magreza leve" 
+24 DEL ) 
+25 DEL } 
+25 PRE senao 
+25 PRE se 
+25 DEL ( 
+25 IDE bmi 
+25 REL < 
+25 NRO 25 
+25 DEL ) 
+25 DEL { 
+26 PRE escreva 
+26 DEL ( 
+26 DEL ) 
+27 DEL } 
+27 PRE senao 
+27 PRE se 
+27 DEL ( 
+27 IDE bmi 
+27 REL < 
+27 NRO 30 
+27 DEL ) 
+27 DEL { 
+28 PRE escreva 
+28 DEL ( 
+29 DEL } 
+29 PRE senao 
+29 PRE se 
+29 DEL ( 
+29 IDE bmi 
+29 REL < 
+29 NRO 35 
+29 DEL ) 
+29 DEL { 
+30 PRE escreva 
+30 DEL ( 
+30 CAD "Obesidade Grau I" 
+30 DEL ) 
+31 DEL } 
+31 PRE senao 
+31 PRE se 
+31 DEL ( 
+31 IDE bmi 
+31 REL < 
+31 NRO 40 
+31 DEL ) 
+31 DEL { 
+32 PRE escreva 
+32 DEL ( 
+32 CAD "Obesidade Grau II (severa)" 
+32 DEL ) 
+33 DEL } 
+33 PRE senao 
+33 DEL { 
+34 PRE escreva 
+34 DEL ( 
+34 DEL ) 
+35 DEL } 
+
+16 CMF "Seu IMC é: " 
+26 CMF "Saudável" 
+28 CMF "Sobrepeso) 
+34 CMF "Obesidade Grau III (mórbida)" 

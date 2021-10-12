@@ -1,0 +1,12 @@
+exemplo teste; % codigo exemplo
+
+real f = -3.5;
+
+cadeia msg = "teste
+
+se ( f >= -10) && (f < )
+    escreva("mensagem );
+%
+@ se ( f >= -10) && (f < )
+{# exa869 mi processadores de
+linguagem de programacao
