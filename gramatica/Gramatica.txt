@@ -1,0 +1,305 @@
+######## Estrutura dos lexames para os tipos ########
+
+	<NRO> ::= <DIGITO><NROCONT>
+	<NROCONT> ::= <> | <DIGITO><NROCONT>
+
+	<REAL> ::= <NRO><REALCONT>
+	<REALCONT> ::= <> | .<NRO>
+
+	<DIGITO> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+	<LETRA> ::= a | b | c | d | e | f | g | h | i | j |k |l | m |n | o | p | q | r| s | t | u | v | w | x | y | z 
+		| A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z
+
+	<BOOL> ::= verdadeiro | falso
+
+	<IDE> ::= <LETRA> <IDECONT> 
+	<IDECONT> ::= <LETRA> <IDECONT> | _ <IDECONT> | <DIGITO><IDECONT> | <>
+
+	<CHARSPEC> ::= \’ | \” 
+
+	<CHAR> ::= ' <LETRA> ' | ' <DIGITO> '| ' <SIMBOLO> ' | ' <CHARSPEC> '
+
+	<CADEIA> ::= " <CADCONT> "
+	<CADCONT> ::= <> | <LETRA><CADCONT> | <DIGITO><CADCONT> | <SIMBOLO><CADCONT> | <CHARSPEC><CADCONT>
+
+#### De acordo com a tabela ascii ####
+	<SIMBOLO> ::= ' ' | # | $ | , | . | ? | @ | ^ | _ | ` | ~
+
+####### Declaracao de numeros sem o 0 ou 00000 ############
+
+	<NROZ> ::= 0 <NROZCONT> | 1<NROCONT> | 2<NROCONT> | 3<NROCONT> | 4<NROCONT> | 5<NROCONT> | 6<NROCONT> | 7<NROCONT> | 8<NROCONT> | 9<NROCONT>
+	<NROZCONT> ::= 0 <NROZCONT>| 1<NROCONT> | 2<NROCONT> | 3<NROCONT> | 4<NROCONT> | 5<NROCONT> | 6<NROCONT> | 7<NROCONT> | 8<NROCONT> | 9<NROCONT>
+
+	<REALZ> ::= <NRO><REALZCONT>
+	<REALZCONT> ::= <> | .<NROZ>
+
+######## Construção do código ###########
+
+	<START> ::= algoritmo <ALGORITMO> 
+		| funcao <FUNCAO> <START>
+		| variaveis <VARIAVEIS> <A>
+		| constantes <CONSTANTES> <B>
+		| registro <REGISTRO> <START>
+
+	<A> ::= algoritmo <ALGORITMO> 
+		| funcao <FUNCAO> <A>
+		| constantes <CONSTANTES> <C>
+		| registro <REGISTRO> <A>
+
+	<B> ::= algoritmo <ALGORITMO> 
+		| funcao <FUNCAO> <B>
+		| variaveis <VARIAVEIS> <C>
+		| registro <REGISTRO> <B>
+
+	<C> ::= algoritmo <ALGORITMO> 
+		| funcao <FUNCAO> <C>
+		| registro <REGISTRO> <C>
+
+############ Conteudos dentro das { } dos comandos ################
+
+	<CONTEUDO> ::= variaveis <VARIAVEIS><CONTEUDO> 
+		| constantes <CONSTANTES><CONTEUDO> 
+		| se ( <SE><CONTEUDO> 
+		| enquanto ( <ENQUANTO><CONTEUDO> 
+		| leia <LEIA><CONTEUDO>
+		| escreva <ESCREVA><CONTEUDO>
+		| para <PARA><CONTEUDO>
+		| registro <REGISTRO><CONTEUDO> 
+		| <ACESSOVAR> = <EXPATRIBUICAO><CONTEUDO>
+		| retorno <RETORNO>;
+		| <>
+	
+########### COMANDOS #################
+
+	<ALGORITMO> ::= { <CONTEUDO> }
+
+	<FUNCAO> ::= <TIPO> <TIPOCONT> <IDE> <FUNCAOINIT>
+		| vazio <TIPOCONT> <IDE> <FUNCAOINIT>
+	<FUNCAOINIT> ::= (<PARANINIT> { <CONTEUDO> }
+	<TIPOCONT>::= [] <VETORMAIS>
+		| <>
+	<VETORMAIS> ::= [] <VETORMAISUM>
+		| <>
+	<VETORMAISUM> ::= [] 
+		| <>
+
+	<PARANINIT> ::= <TIPO> <IDE> <PARAINITCONT>
+	<PARAINITCONT> ::= , <PARANINIT>
+		| )
+
+	<RETORNO> ::= <VALOR> ;
+
+	<CHAMADAFUNCAO> ::= (<PARAN>
+	<PARAN> ::= <PARANCONT> 
+		| )
+	<PARANCONT> ::= <VALOR> <PARANFIM> 
+	<PARANFIM> ::= , <PARANCONT>
+		| )
+
+	<VARIAVEIS> ::= { <VAR> 
+	<CONSTANTES> ::= { <CONST> 
+		
+		<TIPO> ::= inteiro
+			| real
+			| booleano
+			| cadeia
+			| char
+			| registro							*VER ISSO DAQUI PARA OS CASOS DE INICIALIZAÇÃO DE REGISTRO*
+
+		<VAR> ::=  <TIPO> <IDE> <VARCONT>
+		<VARALT> ::= <IDE> <VARCONT>
+		<VARCONT> ::= <VARINIT> <VARFINAL>
+			| <VARFINAL>
+		<VARFINAL> ::= , <VARALT>
+			| ; <VARFIM>
+		<VARFIM> ::= <VAR>
+			| }
+		<VARINIT> ::= = <VALOR>
+			| [<NRO>] <VARINITCONT>
+		<VARINITCONT>::= = { <VETOR> 
+			| [<NRO>] <VARINITCONTMATR>
+		<VARINITCONTMATR> = { <VETOR> , { <VETOR>
+			| [<NRO>] = { <VETOR> , { <VETOR> , { <VETOR>
+		
+		<VETOR> ::= <VALOR> <VETORCONT>
+		<VETORCONT> ::= , <VETOR>
+			| } 
+
+		<VALOR> ::= <REAL>
+			| - <NEGATIVO>
+			| <EXPARITMETICAREAL>
+			| <NRO>
+			| <EXPARITMETICA>
+			| <BOOL>
+			| <EXPLOGICA>
+			| <EXPRELACIONAL>
+			| <CHAR>
+			| <ACESSOVAR>
+			| <CADEIA>
+			| <CHAMADAFUNCAO>
+		<NEGATIVO> ::= <REAL>
+			| <NRO>
+			| <ACESSOVAR>
+
+		<CONST> ::= <TIPO> <IDE> <VARINIT> <CONSTCONT>
+		<CONSTALT> ::= <IDE> <VARINIT> <CONSTCONT>
+	 	<CONSTCONT> ::= , <CONSTALT>
+			| ; <CONSTFIM>
+		<CONSTFIM> ::= <CONST>
+			| }		
+
+	<SE> ::= <EXPLOGICA>) { <CONTEUDO> } <SENAO> 
+		| <EXPRELACIONAL>) { <CONTEUDO> } <SENAO> 
+		| <BOOL>) { <CONTEUDO> } <SENAO> 
+		| <ACESSOVAR>) { <CONTEUDO> } <SENAO> 
+
+	<SENAO> ::= senao { <CONTEUDO> }
+		| <>
+
+	<ENQUANTO> ::= <EXPLOGICA>) { <CONTEUDO> } 
+		| <EXPRELACIONAL>) { <CONTEUDO> } 
+		| <BOOL>) { <CONTEUDO> } 
+		| <ACESSOVAR>) { <CONTEUDO> } 
+
+	<LEIA> ::= (<LEIACONT>
+
+	<LEIACONT> ::= <ACESSOVAR> <LEIAFIM>
+
+	<LEIAFIM> ::= , <LEIACONT>
+		| );
+
+	<ESCONT> ::= <ACESSOVAR> <ESFIM>
+		| <CADEIA> <ESFIM>
+		| <CHAR> <ESFIM>
+
+	<ESFIM> ::= , <ESCONT>
+		| );
+
+	<ESCREVA> ::= (<ESCONT>
+	
+	<PARA> ::= (<ACESSOVAR> = <EXPATRIBUICAO>;<PARACONT>
+	
+	<PARACONT> ::= <EXPLOGICA>;<PARAFIM>
+		| <EXPRELACIONAL>;<PARAFIM>
+		| <IDE>; <PARAFIM>
+	
+	<PARAFIM> ::= <EXPRELACIONAL>){<CONTEUDO>}
+		| <EXPARITMETICA>){<CONTEUDO>}
+
+	<REGISTRO> ::= <IDE> { <VAR> }
+
+	<ACESSOVAR> ::= <IDE> <ACESSOVARCONT>
+
+	<ACESSOVARCONT> ::= .<ACESSOVAR>
+		| [<NRO>] <ACESSOVARCONTB>	
+		| <>
+	<ACESSOVARCONTB>::= [<NRO>] <ACESSOVARCONTC>
+		| <>
+	<ACESSOVARCONTC>::= [<NRO>]
+		| <>
+
+############ EXPRESSOES ##############
+
+	######### Expressao logica ###########
+		<EXPLOGICA> ::= <ACESSOVAR> <EXPLOGICACONT>
+            | <BOOL> <EXPLOGICACONT>
+            | <EXPRELACIONAL> <EXPLOGICACONT>
+            | ( <EXPLOGICA> ) <EXPLOGICACONT>
+			| ! <EXPLOGICAEXC>
+		<EXPLOGICAEXC> ::= ( <PAREN>
+            | <BOOL> <EXPLOGICACONT>
+            | <ACESSOVAR> <EXPLOGICACONT>
+		<PAREN> ::= <EXPLOGICA> ) <EXPLOGICACONT>
+			| <EXPRELACIONAL> ) <EXPLOGICACONT>
+        <EXPLOGICACONT> ::= <LOGICO> <EXPLOGICA>
+            | <>
+        <LOGICO> ::= &&
+            | ||
+
+	######### Expressao relacional ###########
+		<EXPRELACIONAL> ::= <ACESSOVAR> <EXPRELACIONALVAR>
+			| <NRO> <EXPRELACIONALCONT>
+			| <REAL> <EXPRELACIONALCONT>
+			| - <NEGATIVO> <EXPRELACIONALCONT>
+			| <BOOL> <EXPRELACIONALREST>
+			| ! <EXPRELACIONALEXC>
+			| <EXPARITMETICA> <EXPRELACIONALCONT>
+			| <EXPLOGICA> <EXPRELACIONALREST>
+			| ( <EXPRELACIONAL> ) <EXPRELACIONALREST>
+		<EXPRELACIONALVAR> ::= <EXPRELACIONALCONT>
+			| <EXPRELACIONALREST>
+		<EXPRELACIONALEXC> ::= <BOOL> <EXPRELACIONALREST>
+			| ( <EXPRELACIONAL> ) <EXPRELACIONALREST>
+		
+		<EXPRELACIONALCONT> ::= > <EXPRELACIONALB>
+			| < <EXPRELACIONALB>
+			| >= <EXPRELACIONALB>
+			| <= <EXPRELACIONALB>
+			| != <EXPRELACIONALB>
+			| == <EXPRELACIONALB>
+
+		<EXPRELACIONALREST> ::= != <EXPRELACIONALB>
+			| == <EXPRELACIONALB>
+
+		<EXPRELACIONALB> ::= <ACESSOVAR>
+			| <CHAR>
+			| <NRO>
+			| <REAL>
+			| <EXPARITMETICA>
+			| ( <EXPRELACIONAL> )
+
+
+	######### Expressao aritmetica ###########			
+			
+		<EXPARITMETICA> ::= <ACESSOVAR> <EXPARITMETICACONT>
+			| <NRO> <EXPARITMETICACONT>
+			| <REAL> <EXPARITMETICACONT>
+			| - <NEGATIVO> <EXPARITMETICACONT>
+			| ( <EXPARITMETICAPAREN>
+		<EXPARITMETICAPAREN> ::= <EXPARITMETICA> ) <EXPARITMETICACONTB> 
+			| <NRO>) <EXPARITMETICACONTB>
+			| <ACESSOVAR>) <EXPARITMETICACONTB>
+
+		<EXPARITMETICACONT> ::= + <EXPARITMETICAB>
+			| - <EXPARITMETICAB>
+			| * <EXPARITMETICAB>
+			| / <EXPARITMETICAZERO>
+			| <EXPARITMETICACONTINCR>
+		<EXPARITMETICACONTINCR> ::= - -
+			| + +
+
+		<EXPARITMETICAB> ::= <ACESSOVAR> <EXPARITMETICACONTB>
+			| <NRO> <EXPARITMETICACONTB>
+			| <REAL> <EXPARITMETICACONTB>
+			| - <NEGATIVO> <EXPARITMETICACONTB>
+			| ( <EXPARITMETICABPAREN>
+		<EXPARITMETICABPAREN> ::= <EXPARITMETICA> ) 
+			| <NRO>) <EXPARITMETICACONTB>
+			| <ACESSOVAR>) <EXPARITMETICACONTB>
+
+		<EXPARITMETICACONTB> ::= + <EXPARITMETICAB>
+			| - <EXPARITMETICAB>
+			| * <EXPARITMETICAB>
+			| / <EXPARITMETICAZERO>
+			| <>
+			| <EXPARITMETICACONTBINCR>
+		<EXPARITMETICACONTBINCR> ::= - -
+			| + +
+
+		<EXPARITMETICAZERO> ::= <ACESSOVAR> <EXPARITMETICACONT>
+			| <NROZ> <EXPARITMETICACONT>
+			| <REALZ> <EXPARITMETICACONT>
+			| - <ACESSOVAR> <EXPARITMETICACONT>
+			| - <NROZ> <EXPARITMETICACONT>
+			| - <REALZ> <EXPARITMETICACONT>
+			| ( <PARENZERO>
+		<PARENZERO> ::= <EXPARITMETICA> )
+		 	| - <NROZ> <EXPARITMETICACONT>
+			| - <REALZ> <EXPARITMETICACONT>
+			| <NROZ> <EXPARITMETICACONT>
+			| <REALZ> <EXPARITMETICACONT>
+
+	######### Expressao atribuicao ###########
+
+		<EXPATRIBUICAO> ::= = <VALOR> ;
