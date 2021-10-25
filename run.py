@@ -3,7 +3,7 @@ import anl_sint
 import os.path
 
 def read_write_file(file_value):
-    with open('input\\entrada' + str(file_value) + '.txt') as file:
+    with open('input\entrada' + str(file_value) + '.txt') as file:
                 #data = file.readlines()
                 text = file.read() #in case it can read token by token with this methods
 

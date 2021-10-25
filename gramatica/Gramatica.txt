@@ -56,6 +56,10 @@
 		| funcao <FUNCAO> <C>
 		| registro <REGISTRO> <C>
 
+		aux_char = str(aux_char)
+                tkn_type = aux_char[0:3]
+                lexeme = aux_char[4:]
+
 ############ Conteudos dentro das { } dos comandos ################
 
 	<CONTEUDO> ::= variaveis <VARIAVEIS><CONTEUDO> 

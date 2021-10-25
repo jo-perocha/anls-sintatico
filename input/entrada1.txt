@@ -1,1 +1,1 @@
-algoritmo{retorno verdadeiro;}
+algoritmo{variaveis{inteiro i = 2;}
