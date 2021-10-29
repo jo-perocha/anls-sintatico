@@ -13,9 +13,11 @@ class Parser:
     def __init__(self, result_lex):
         self.lex_array = result_lex#array que vai ter todos os token e lexemas que o analisador sintático vai analisar
         self.pos = 0#index da lexeme_matrix
-        self.lexeme_matrix = []#vai ser a matriz que guarda o valor da linha o tipo do token e o lexema de cada saída do léxico
+        self.lexeme_matrix = []#vai ser a matriz que guarda o valor da linha o tipo  token e o lexema de cada saída do léxico
         self.current_char = None#é uma linha inteira da matriz lexeme_matrix
         self.pars_res = []
+
+        self.counter = 0 #auxiliar para debugar onde aconteceu o primeiro erro
 
     #a funcao cria uma matriz em que cada linha vai conter o número de linha do token, o tipo do token e o lexema em si
     def make_matrix(self):
@@ -37,6 +39,7 @@ class Parser:
         self.make_matrix()
         return self.lexeme_matrix[pos]
 
+    #o next_char vai passar para o próximo token na cadeia. Mas ele também serve para verificar se chegou no final. Se chegou no final da cadeia ele retorna True, se não ele retorna None#
     def next_char(self):
         self.pos += 1
         #print("pos: " + str(self.pos))
@@ -99,12 +102,13 @@ class Parser:
 
     ##CONTEUDO##
     def conteudo(self):
-        if self.current_char[2] == 'variavies':
+        #print(self.current_char[2])
+        #print(self.pars_res)
+        if self.current_char[2] == 'variaveis':
             self.next_char()
             self.variaveis()
             self.next_char()
             self.conteudo()
-        print(self.current_char[2])
         if self.current_char[2] == 'constantes':
             self.next_char()
             self.constantes()
@@ -114,15 +118,12 @@ class Parser:
         if self.current_char[2] == 'leia':
             self.next_char()
             self.leia()
-            self.next_char()
+            #self.next_char()#é pra ser retirado
             self.conteudo()
             return True
         elif self.current_char[2] == 'escreva':
             self.next_char()
             self.escreva()
-            print(self.current_char[2])
-            self.next_char()
-            print(self.current_char[2])
             self.conteudo()
             return True
         elif self.current_char[2] == 'retorno':
@@ -133,13 +134,13 @@ class Parser:
             self.next_char()
             return False
         elif self.current_char[2] == ';':
-            if self.next_char():
+            if not self.next_char():#é pra ver se tem next char?
                 return None
             else: self.prev_char()
         else:self.panic('CFMF1', ';')
 
     ##VARIAVEIS##
-    def variavies(self):
+    def variaveis(self):
         if self.current_char[2] == '{':
             self.next_char()
             self.var()
@@ -308,7 +309,7 @@ class Parser:
     
     def valor(self):
         if self.current_char[1] == 'REAL':
-            return None
+            self.next_char()
         elif self.current_char[2] == '-':
             self.next_char()
             if self.current_char[1] != 'NRO':
@@ -319,6 +320,8 @@ class Parser:
             if self.current_char[1] == 'LOG': self.explogica()
             elif self.current_char[2] == ';': self.prev_char(); self.bool()
             else: self.panic('AMF', ';')
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
             
     
     def constcont(self):
@@ -343,28 +346,29 @@ class Parser:
         if self.current_char[2] == '(':
             self.next_char()
             self.leiacont()
-        else: self.erro('CFMF')
+        else: self.panic('CFMF1', ';')
     
     def leiacont(self):
         self.acessovar()
+        #self.next_char()
         self.leiafim()
     
     def leiafim(self):
-        if self.current_char == ',':
+        if self.current_char[2] == ',':
             self.next_char()
             self.leiacont()
-        elif self.current_char == ')':
+        elif self.current_char[2] == ')':
             self.next_char()
-            if self.current_char != ';':
-                self.erro()
+            if self.current_char[2] != ';':
+                self.panic('CFMF', ';')
             else: self.next_char()
-        else: self.erro('CFMF')
+        else: self.panic('CFMF2', ';')
 
     def escreva(self):
         if self.current_char[2] == '(':
             self.next_char()
             self.escont()
-        else: self.erro('CFMF')
+        else: self.panic('CFMF', ';')
 
     def escont(self):#nessa produção ele gera outras três produções de não terminal, então é analisado o tipo to token para saber qual caminho prosseguir
         if self.current_char[1] == 'IDE':
@@ -379,7 +383,7 @@ class Parser:
             self.next_char()
             #self.char()
             self.esfim()
-        else: self.erro('CFMF')
+        else: self.panic('CFMF', ';')
     
     def esfim(self):
         if self.current_char[2] == ',':
@@ -388,33 +392,72 @@ class Parser:
         elif self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
-                self.erro('CFMF2')
-            else: self.next_char();#se o último character for realmente o ';' então o escreva acabou e eu passo para o próximo character a ser analisado
-        else: self.erro('CFMF')
+                self.panic('CFMF2', ';')
+            else: self.next_char()#se o último character for realmente o ';' então o escreva acabou e eu passo para o próximo character a ser analisado
+        else: self.panic('CFMF', ';')
 
     def retorno(self):
         self.valor()
         self.next_char()
         if self.current_char[2] != ";":
-            self.erro('CMMF')
-    
-    def valor(self):
-        self.bool()
+            self.panic('CMMF', ';')
 
     def bool(self):
         if self.current_char[2] != 'verdadeiro' and self.current_char[2] != 'falso':
-            self.panico('VMF', ';')
+            self.panic('VMF', ';')
     
     def acessovar(self):
         if self.current_char[1] == 'IDE':
             self.next_char()
             self.acessovarcont()
+        
+    #ACESSOVARCONT#
+    def acessovarcont(self):
+        if self.current_char[2] == '.':
+            self.next_char()
+            self.acessovar()
+        elif self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == ']':
+                    self.next_char()
+                    self.acessovarcontb()
+                else: self.panic('CMF3', ';')
+            else: self.panic('CMF4', ';')
+        else: return None
+    
+    #ACESSOVARCONTB#
+    def acessovarcontb(self):
+        if self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == ']':
+                    self.next_char()
+                    self.acessovarcontc()
+                else: self.panic('CMF5', ';')
+            else: self.panic('CMF6', ';')
+        else: return None# ele retorna None porque pode ter uma produção vazia, e até agora a produção vazia tem a ideia de sert tratada na função que a chamou
+    
+    #ACESSOVARCONTC#
+    def acessovarcontc(self):
+        if self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == ']':
+                    return None
+                else: self.panic('CMF7', ';')
+            else: self.panic('CMF8', ';')
+        else: return None# ele retorna None porque pode ter uma produção vazia, e até agora a produção vazia tem a ideia de sert tratada na função que a chamou
     
     def erro(self, error):
         self.pars_res.append(error)
         #print("I wasn't supposed to be here!")
     
     def panic(self, error, stop_char):
+        self.counter += 1
         self.pars_res.append(error)
         while self.current_char[2] != stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None

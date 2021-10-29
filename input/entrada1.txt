@@ -1,1 +1,3 @@
-algoritmo{variaveis{inteiro i = 2;}
+algoritmo{
+    escreva("");
+}
