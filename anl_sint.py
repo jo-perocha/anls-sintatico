@@ -97,8 +97,8 @@ class Parser:
             #no final da checagem de conteúdo eu vejo se ele termina com um '}'
                 self.next_char()
                 if self.current_char[2] != '}':
-                    self.panic('CMMFalgoritmo', ';')
-        else: self.panic('CMMF', ';')
+                    self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
 
     ##CONTEUDO##
     def conteudo(self):
@@ -109,13 +109,20 @@ class Parser:
             self.variaveis()
             self.next_char()
             self.conteudo()
-        if self.current_char[2] == 'constantes':
+        elif self.current_char[2] == 'constantes':
             self.next_char()
             self.constantes()
             self.next_char()
             self.conteudo()
             return True
-        if self.current_char[2] == 'leia':
+        elif self.current_char[2] == 'se':
+            self.next_char()
+            if self.current_char[2] == '(':
+                self.next_char()
+                self.se()
+                self.next_char()
+                self.conteudo()
+        elif self.current_char[2] == 'leia':
             self.next_char()
             self.leia()
             #self.next_char()#é pra ser retirado
@@ -137,14 +144,14 @@ class Parser:
             if not self.next_char():#é pra ver se tem next char?
                 return None
             else: self.prev_char()
-        else:self.panic('CFMF1', ';')
+        else:self.panic(self.current_char[0], ';')
 
     ##VARIAVEIS##
     def variaveis(self):
         if self.current_char[2] == '{':
             self.next_char()
             self.var()
-        else: self.panic('CMF', ';')
+        else: self.panic(self.current_char[0], ';')
 
     ##VAR##
     def var(self):
@@ -191,7 +198,7 @@ class Parser:
         if self.current_char[2] == '{':
             self.next_char()
             self.const()
-        else: self.panic('CMMF', ';')
+        else: self.panic(self.current_char[0], ';')
 
     ##CONST##
     def const(self):
@@ -207,11 +214,11 @@ class Parser:
     def tipo(self):
         if (self.current_char[2] != 'inteiro' and self.current_char[2] != 'real' and self.current_char[2] != 'boolenao' 
             and self.current_char[2] != 'cadeia' and self.current_char[2] != 'char' and self.current_char[2] != 'registro'):
-            self.panic('VMF', ';')
+            self.panic(self.current_char[0], ';')
 
     def ide(self):
         if self.current_char[1] != 'IDE':
-            self.panic('VMF', ';')
+            self.panic(self.current_char[0], ';')
 
     def varinit(self):
         if self.current_char[2] == '=':
@@ -224,9 +231,9 @@ class Parser:
                 if self.current_char == ']':
                     self.next_char()
                     self.varinitcont()
-                else: self.panic('VMF', ';')
-            else: self.panic('VMF', ';')
-        else: self.panic('VMF', ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
     
     ##VARINITCONT##
     def varinitcont(self):
@@ -241,9 +248,9 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.varinitcontmatr()
-                else: self.panic('VMF', ';')
-            else: self.panic('VMF', ';')
-        else: self.panic('CMF', ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
 
     ##VARINITCONTMATR##
     def varinitcontmatr(self):
@@ -256,8 +263,8 @@ class Parser:
                 if self.current_char[2] == '{':
                     self.next_char()
                     self.vetor()
-                else: self.panic('VMF', ';')
-            else: self.panic('VMF', ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -282,15 +289,15 @@ class Parser:
                                             self.next_char()
                                             self.vetor()
                                             self.next_char()
-                                        else: self.panic('VMF', ';')
-                                    else: self.panic('VMF', ';')
-                                else: self.panic('VMF', ';')
-                            else: self.panic('VMF', ';')
-                        else: self.panic('VMF', ';')
-                    else: self.panic('VMF', ';')
-                else: self.panic('VMF', ';')
-            else: self.panic('VMF', ';')
-        else: self.panic('VMF', ';')
+                                        else: self.panic(self.current_char[0], ';')
+                                    else: self.panic(self.current_char[0], ';')
+                                else: self.panic(self.current_char[0], ';')
+                            else: self.panic(self.current_char[0], ';')
+                        else: self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
 
     ##VETOR##
     def vetor(self):
@@ -313,13 +320,13 @@ class Parser:
         elif self.current_char[2] == '-':
             self.next_char()
             if self.current_char[1] != 'NRO':
-                self.panic('AMF', ';')
+                self.panic(self.current_char[0], ';')
         #elif self.current_char[1] == 'IDE' or self.current_char[1] == 'NRO' or self.current_char[1] == ''#indeterminação no caso do negativo que pode ser um -<REAL> ou - em <exparitme>
         elif self.current_char[1] == 'BOOL':#se ele for um booleano ele pode ir para dois caminhos, então se checa o que vem depois para saber qual caminho seguir
             self.next_char()
             if self.current_char[1] == 'LOG': self.explogica()
             elif self.current_char[2] == ';': self.prev_char(); self.bool()
-            else: self.panic('AMF', ';')
+            else: self.panic(self.current_char[0], ';')
         elif self.current_char[1] == 'NRO':
             self.next_char()
             
@@ -346,7 +353,7 @@ class Parser:
         if self.current_char[2] == '(':
             self.next_char()
             self.leiacont()
-        else: self.panic('CFMF1', ';')
+        else: self.panic(self.current_char[0], ';')
     
     def leiacont(self):
         self.acessovar()
@@ -360,15 +367,15 @@ class Parser:
         elif self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
-                self.panic('CFMF', ';')
+                self.panic(self.current_char[0], ';')
             else: self.next_char()
-        else: self.panic('CFMF2', ';')
+        else: self.panic(self.current_char[0], ';')
 
     def escreva(self):
         if self.current_char[2] == '(':
             self.next_char()
             self.escont()
-        else: self.panic('CFMF', ';')
+        else: self.panic(self.current_char[0], ';')
 
     def escont(self):#nessa produção ele gera outras três produções de não terminal, então é analisado o tipo to token para saber qual caminho prosseguir
         if self.current_char[1] == 'IDE':
@@ -383,7 +390,7 @@ class Parser:
             self.next_char()
             #self.char()
             self.esfim()
-        else: self.panic('CFMF', ';')
+        else: self.panic(self.current_char[0], ';')
     
     def esfim(self):
         if self.current_char[2] == ',':
@@ -392,25 +399,68 @@ class Parser:
         elif self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
-                self.panic('CFMF2', ';')
+                self.panic(self.current_char[0], ';')
             else: self.next_char()#se o último character for realmente o ';' então o escreva acabou e eu passo para o próximo character a ser analisado
-        else: self.panic('CFMF', ';')
+        else: self.panic(self.current_char[0], ';')
 
     def retorno(self):
         self.valor()
         self.next_char()
         if self.current_char[2] != ";":
-            self.panic('CMMF', ';')
+            self.panic(self.current_char[0], ';')
 
     def bool(self):
         if self.current_char[2] != 'verdadeiro' and self.current_char[2] != 'falso':
-            self.panic('VMF', ';')
+            self.panic(self.current_char[0], ';')
     
+    #SE#
+    def se(self):
+        #INDETERMINAÇÕES#
+        if self.current_char[1] == 'IDE':
+            self.acessovar()#como o acessovar pode ser utilizado em outras produções, é melhor eu mandar para o acessovar com o current_char sendo tipo IDE, para que ele possa sempre checar se é realmente IDE
+            if self.current_char[1] == 'LOG':
+                self.explogicacont()
+            elif self.current_char[2] == ')': return None#caso ele seja apenas um acessovar sozinho
+
+        elif self.current_char[2] == '(':#expressão lógica, expressão relacional
+            self.next_char()
+            if self.current_char[1] == 'IDE':#chama acessovar?
+                self.next_char()
+                if self.current_char[1] == 'LOG':
+                    self.next_char()
+                    self.explogica()
+                elif(self.current_char[2] == '>' or self.current_char[2] == '<' or self.current_char[2] == '>=' or self.current_char[2] == '<='
+                     or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '+' or self.current_char[2] == '-'
+                     or self.current_char[2] == '*' or self.current_char[2] == '/' or self.current_char[2] == '--' or self.current_char[2] == '++'):#o que vem depois do ide nas produções
+
+
+
+        elif self.current_char[2] == '!':#expressão lógica, expressão relacional
+            self.explogica()
+
+        elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':#booleano, expressão lógica, expressão relacional
+            self.explogica()
+
+        #EXPRELACIONAL#
+        elif self.current_char[1] == 'NRO' or self.current_char[2] == '-':
+            self.exprelacional()
+
+        # elif self.curren_char[2] == 'verdadeiro' or if self.current_char[2] == 'falso':
+        # elif self.curren_char[1] == 'NRO':
+        # elif self.curren_char[2] == '-':
+        # elif self.current_char[2] == '!':
+        # elif self.current_char[2] == '(':
+        # elif self.current_char[1] == 'CHAR':     
+        # elif(self.current_char[2] == '<' or self.current_char[2] == '>' or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '(' or self.current_char[2] == '-'
+                 #or self.current_char[2] == '<=' or self.current_char[2] == '>=' or self.current_char[1] == 'IDE' or self.current_char[1] == 'CHAR' or self.current_char[1] == 'NRO'):   
+    
+    #ACESSOVAR#
     def acessovar(self):
         if self.current_char[1] == 'IDE':
             self.next_char()
             self.acessovarcont()
-        
+        else: self.panic(self.current_char[0], ';')
+    
     #ACESSOVARCONT#
     def acessovarcont(self):
         if self.current_char[2] == '.':
@@ -423,10 +473,10 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.acessovarcontb()
-                else: self.panic('CMF3', ';')
-            else: self.panic('CMF4', ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
         else: return None
-    
+
     #ACESSOVARCONTB#
     def acessovarcontb(self):
         if self.current_char[2] == '[':
@@ -436,9 +486,9 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.acessovarcontc()
-                else: self.panic('CMF5', ';')
-            else: self.panic('CMF6', ';')
-        else: return None# ele retorna None porque pode ter uma produção vazia, e até agora a produção vazia tem a ideia de sert tratada na função que a chamou
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: return None
     
     #ACESSOVARCONTC#
     def acessovarcontc(self):
@@ -447,18 +497,19 @@ class Parser:
             if self.current_char[1] == 'NRO':
                 self.next_char()
                 if self.current_char[2] == ']':
-                    return None
-                else: self.panic('CMF7', ';')
-            else: self.panic('CMF8', ';')
-        else: return None# ele retorna None porque pode ter uma produção vazia, e até agora a produção vazia tem a ideia de sert tratada na função que a chamou
-    
+                    self.next_char()
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: return None
+
     def erro(self, error):
         self.pars_res.append(error)
         #print("I wasn't supposed to be here!")
     
-    def panic(self, error, stop_char):
+    def panic(self, error_line, stop_char):
         self.counter += 1
-        self.pars_res.append(error)
+        error_message = 'Erro Sintático na linha: ' + str(error_line)
+        self.pars_res.append(error_message)
         while self.current_char[2] != stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
                 break
