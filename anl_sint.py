@@ -160,11 +160,10 @@ class Parser:
         self.ide()
         self.next_char()
         self.varcont()
-        self.next_char()
 
     ##VARCONT##
     def varcont(self):
-        if self.current_char[2] == ',' or self.current_char[2] == ';':
+        if self.current_char[2] == ',' or self.current_char[2] == ';':#isso permite a produção de só um ','
             self.varfinal()
         else:
             self.varinit()
@@ -212,14 +211,26 @@ class Parser:
     
     ##TIPO##
     def tipo(self):
-        if (self.current_char[2] != 'inteiro' and self.current_char[2] != 'real' and self.current_char[2] != 'boolenao' 
-            and self.current_char[2] != 'cadeia' and self.current_char[2] != 'char' and self.current_char[2] != 'registro'):
-            self.panic(self.current_char[0], ';')
+        if self.current_char[2] == 'inteiro':
+            return None
+        elif self.current_char[2] == 'real':
+            return None
+        elif self.current_char[2] == 'booleano':
+            return None
+        elif self.current_char[2] == 'cadeia':
+            return None
+        elif self.current_char[2] == 'char':
+            return None
+        elif self.current_char[2] == 'registro':
+            return None
+        else: self.panic(self.current_char[0], ';')
 
+    #IDE#
     def ide(self):
         if self.current_char[1] != 'IDE':
             self.panic(self.current_char[0], ';')
 
+    #VARINIT#
     def varinit(self):
         if self.current_char[2] == '=':
             self.next_char()
@@ -228,19 +239,25 @@ class Parser:
             self.next_char()
             if self.current_char[1] == 'NRO':
                 self.next_char()
-                if self.current_char == ']':
+                if self.current_char[2] == ']':
                     self.next_char()
                     self.varinitcont()
+                    if self.current_char[2] != ',':
+                        if self.current_char[2] == ';':
+                            return None
+                    else: self.panic(self.current_char[0], ';')
                 else: self.panic(self.current_char[0], ';')
             else: self.panic(self.current_char[0], ';')
         else: self.panic(self.current_char[0], ';')
     
     ##VARINITCONT##
     def varinitcont(self):
-        if self.current_char[2] == '{':
+        if self.current_char[2] == '=':
             self.next_char()
-            self.vetor()
-            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.vetor()
+            else: self.panic(self.current_char[0], ';')
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -248,21 +265,27 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.varinitcontmatr()
+                    if self.current_char[2] != ',':
+                        if self.current_char[2] == ';':
+                            return None
+                        else: self.panic(self.current_char[0], ';')
                 else: self.panic(self.current_char[0], ';')
             else: self.panic(self.current_char[0], ';')
         else: self.panic(self.current_char[0], ';')
 
     ##VARINITCONTMATR##
     def varinitcontmatr(self):
-        if self.current_char[2] == '{':
+        if self.current_char[2] == '=':
             self.next_char()
-            self.vetor()
-            self.next_char()
-            if self.current_char[2] == ',':
+            if self.current_char[2] == '{':
                 self.next_char()
-                if self.current_char[2] == '{':
+                self.vetor()
+                if self.current_char[2] == ',':
                     self.next_char()
-                    self.vetor()
+                    if self.current_char[2] == '{':
+                        self.next_char()
+                        self.vetor()
+                    else: self.panic(self.current_char[0], ';')
                 else: self.panic(self.current_char[0], ';')
             else: self.panic(self.current_char[0], ';')
         elif self.current_char[2] == '[':
@@ -276,19 +299,19 @@ class Parser:
                         if self.current_char[2] == '{':
                             self.next_char()
                             self.vetor()
-                            self.next_char()
                             if self.current_char[2] == ',':
                                 self.next_char()
                                 if self.current_char[2] == '{':
                                     self.next_char()
                                     self.vetor()
-                                    self.next_char()
                                     if self.current_char[2] == ',':
                                         self.next_char()
                                         if self.current_char[2] == '{':
                                             self.next_char()
                                             self.vetor()
-                                            self.next_char()
+                                            if self.current_char[2] == ';':
+                                                return None
+                                            else: self.panic(self.current_char[0], ';')
                                         else: self.panic(self.current_char[0], ';')
                                     else: self.panic(self.current_char[0], ';')
                                 else: self.panic(self.current_char[0], ';')
@@ -304,7 +327,6 @@ class Parser:
         self.valor()
         self.next_char()
         self.vetorcont()
-        self.next_char()
 
     ##VETORCONT##
     def vetorcont(self):
@@ -315,20 +337,53 @@ class Parser:
             self.next_char()
     
     def valor(self):
-        if self.current_char[1] == 'REAL':
+        if self.current_char[1] == 'NRO':
+            return None
+        #indeterminacao entre -<NEGATIVO> e -<NEGATIVO><EXPARITMETICACONT>
+        elif self.current_char[2] == '-':#pode ser valor negativo ou expressão aritmetica negativa. Nos dois casos ele vai ser -<negativo>, <negativo> pode ser um acessovar ou um nro
             self.next_char()
-        elif self.current_char[2] == '-':
-            self.next_char()
-            if self.current_char[1] != 'NRO':
-                self.panic(self.current_char[0], ';')
-        #elif self.current_char[1] == 'IDE' or self.current_char[1] == 'NRO' or self.current_char[1] == ''#indeterminação no caso do negativo que pode ser um -<REAL> ou - em <exparitme>
-        elif self.current_char[1] == 'BOOL':#se ele for um booleano ele pode ir para dois caminhos, então se checa o que vem depois para saber qual caminho seguir
-            self.next_char()
-            if self.current_char[1] == 'LOG': self.explogica()
-            elif self.current_char[2] == ';': self.prev_char(); self.bool()
-            else: self.panic(self.current_char[0], ';')
-        elif self.current_char[1] == 'NRO':
-            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+                    self.exparitmeticab()
+                elif self.current_char[2] == '--' or self.current_char[2] == '++':
+                    return None
+                else: self.prev_char()# se ele for um -nro e não for mais nada de exparitmetica depois quer dizer que esse elemento já acabou então eu volto um character
+            elif self.current_char[1] == 'IDE':
+                self.acessovar()#acessovar já pula de character no final por causa da forma de sua construção
+                if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+                    self.exparitmeticab()
+                elif self.current_char[2] == '--' or self.current_char[2] == '++':
+                    return None
+                else: self.prev_char()
+        elif self.current_char[1] == 'IDE':#indeterminação entre: explogica, exparitmetica, exprelacional, acessovar
+            self.acessovar()
+            if self.current_char[2] == '&&' or self.current_char[2] == '||':
+                self.next_char()
+                self.explogica()
+                self.next_char()
+                if self.current_char[2] == '==' or self.current_char[2] == '!=':
+                    self.exprelacionalb()
+                else: self.prev_char()
+            elif self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+                    self.exparitmeticab()
+                    #self.next_char()
+                    #if self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '>=' or self.current_char[2] == '<=' or self.current_char[2] == '<' or self.current_char[2] == '>'
+            elif self.current_char[2] == '--' or self.current_char[2] == '++':
+                    return None
+        elif self.current_char[1] == 'BOOL':
+            return None#deve ter a indeterminação
+        elif self.current_char[1] == 'CHAR':
+            return None
+        elif self.current_char[1] == 'CAD':
+            return None
+        else: self.panic(self.current_char[0], ';')
+
+        # elif self.current_char[1] == 'BOOL':#se ele for um booleano ele pode ir para dois caminhos, então se checa o que vem depois para saber qual caminho seguir
+        #     self.next_char()
+        #     if self.current_char[1] == 'LOG': self.explogica()
+        #     elif self.current_char[2] == ';': self.prev_char(); self.bool()
+        #     else: self.panic(self.current_char[0], ';')
             
     
     def constcont(self):
@@ -426,12 +481,14 @@ class Parser:
             self.next_char()
             if self.current_char[1] == 'IDE':#chama acessovar?
                 self.next_char()
-                if self.current_char[1] == 'LOG':
+                if self.current_char[1] == 'LOG':#O operador lógico pode ser uma expressão lógica sozinha, ou uma expressão lógica dentro de uma expressão relacionla, por isso tem que checar o que vem depois
                     self.next_char()
                     self.explogica()
                 elif(self.current_char[2] == '>' or self.current_char[2] == '<' or self.current_char[2] == '>=' or self.current_char[2] == '<='
                      or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '+' or self.current_char[2] == '-'
                      or self.current_char[2] == '*' or self.current_char[2] == '/' or self.current_char[2] == '--' or self.current_char[2] == '++'):#o que vem depois do ide nas produções
+                     self.next_char()
+                     self.exprelacional()
 
 
 
