@@ -206,7 +206,7 @@ class Parser:
         self.ide()
         self.next_char()
         self.varinit()
-        self.next_char()
+        print(self.current_char[2])
         self.constcont()
     
     ##TIPO##
@@ -235,6 +235,11 @@ class Parser:
         if self.current_char[2] == '=':
             self.next_char()
             self.valor()
+            self.next_char()
+            if self.current_char[2] != ',':
+                if self.current_char[2] == ';':
+                    return None
+                else: self.panic(self.current_char[0], ';')
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -371,9 +376,9 @@ class Parser:
                     #if self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '>=' or self.current_char[2] == '<=' or self.current_char[2] == '<' or self.current_char[2] == '>'
             elif self.current_char[2] == '--' or self.current_char[2] == '++':
                     return None
-        elif self.current_char[1] == 'BOOL':
+        elif self.current_char[1] == 'PRE':
             return None#deve ter a indeterminação
-        elif self.current_char[1] == 'CHAR':
+        elif self.current_char[1] == 'CAR':
             return None
         elif self.current_char[1] == 'CAD':
             return None
@@ -398,11 +403,14 @@ class Parser:
         if self.current_char[1] == 'IDE':
             self.next_char()
             self.varinit()
-            self.next_char()
             self.constcont()
 
     def constfim(self):
-        self.const()
+        if self.current_char[1] == 'PRE':
+            self.const()
+        elif self.current_char[2] == '}':
+            return None
+        
 
     def leia(self):
         if self.current_char[2] == '(':

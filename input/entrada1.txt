@@ -1,5 +1,3 @@
 algoritmo{
-    variaveis{
-        inteiro a[2][2]= {2}, {2};
-    }
+    constantes{inteiro const = 2; inteiro const = 2}
 }
