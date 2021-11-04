@@ -1,4 +1,5 @@
 from types import coroutine
+from typing import Counter
 import anl_lex
 from anl_lex import Token
 
@@ -16,7 +17,11 @@ class Parser:
         self.lexeme_matrix = []#vai ser a matriz que guarda o valor da linha o tipo  token e o lexema de cada saída do léxico
         self.current_char = None#é uma linha inteira da matriz lexeme_matrix
         self.pars_res = []
-
+        self.relacional_list =['<', '>', '<=', '>=', '!=', '==']
+        self.aritmetica_list =['+', '-', '*', '/']
+        self.aritmetica_add_list =['++', '--']
+        self.logica_list =['&&', '||']
+        self.bool_list =['verdadeiro', 'falso']
         self.counter = 0 #auxiliar para debugar onde aconteceu o primeiro erro
 
     #a funcao cria uma matriz em que cada linha vai conter o número de linha do token, o tipo do token e o lexema em si
@@ -145,6 +150,483 @@ class Parser:
                 return None
             else: self.prev_char()
         else:self.panic(self.current_char[0], ';')
+    
+    #SE#
+    def se(self):
+        self.expressao()
+        self.next_char()
+        if self.current_char[2] == ')':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()#talvez precise de um next char
+                if self.current_char[2] == '}':
+                    self.next_char()
+                    self.senao()
+                else:self.panic(self.current_char[0], ';')
+            else:self.panic(self.current_char[0], ';')
+        else:self.panic(self.current_char[0], ';')
+    
+    #EXPRESSAO#
+    def expressao(self):#começa com uma indeterminação entre expressão genérica e expressão aritmética
+        if self.current_char[2] in self.bool_list:
+            self.next_char()
+            self.expressaocont()
+        elif self.current_char[2] == '!':
+            self.next_char()
+            self.exprexc()
+        elif self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] in self.relacional_list:
+                self.next_char()
+                self.exprelacionalb()
+            elif self.current_char[2] in self.logica_list:
+                self.next_char()
+                self.expressao()
+            elif self.current_char[2] in self.aritmetica_list:
+                self.next_char()
+                self.exparitmeticab()
+                self.next_char()
+                self.expressaocont()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            if self.current_char[2] in self.relacional_list:
+                self.next_char()
+                self.exprelacionalb()
+            elif self.current_char[2] in self.logica_list:
+                self.next_char()
+                self.expressao()
+            elif self.current_char[2] in self.aritmetica_list:
+                self.next_char()
+                self.exparitmeticab()
+                self.next_char()
+                self.expressaocont()
+        elif self.current_char[2] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] in self.aritmetica_list:
+                    self.next_char()
+                    self.exparitmeticab()
+                    self.next_char()
+                    self.expressaocont()
+                elif self.current_char[2] in self.relacional_list:
+                    self.next_char()
+                    self.exprelacionalb()
+                elif self.current_char[2] in self.logica_list:
+                    self.next_char()
+                    self.expressao()
+        #repete quase que a mesma coisa, mas para iniciar com parênteses
+        elif self.current_char[2] == '(':
+            self.next_char()
+            if self.current_char[1] == 'IDE':
+                self.acessovar()
+                if self.current_char[2] == ')':
+                    self.next_char()
+                    self.exparitmeticacontb()
+                else:
+                    if self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressao()
+                    elif self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocont()
+                    else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == ')':
+                    self.next_char()
+                    self.exparitmeticacontb()
+                else:
+                    if self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocont()
+                    elif self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressao()
+                    else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == '-':
+                self.next_char()
+                if self.current_char[1] == 'NRO':
+                    self.next_char()
+                    if self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocont()
+                    elif self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressao()
+                    else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == '!':
+                self.next_char()
+                self.exprexc()
+            elif self.current_char[2] in self.bool_list:
+                self.next_char()
+                self.expressaocont()
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPREXC#
+    def exprexc(self):
+        if self.current_char[2] == '(':
+            self.next_char()
+            self.expressao
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.expressaocontb()
+            else: self.panic(self.current_char[0], ';')
+        elif self.current_char[2] in self.bool_list:
+            self.next_char()
+            self.expressaocontb()
+        elif self.current_char[1] == 'IDE': 
+            self.acessovar()
+            self.expressaocontb()
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPRESSAOCONT#
+    def expressaocont(self):
+        if self.current_char[2] in self.logica_list:
+            self.next_char()
+            self.expressao()
+        elif self.current_char[2] in self.relacional_list:
+            self.next_char()
+            self.exprelacionalb()
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPRESSAOCONTB#
+    def expressaocontb(self):
+        if self.current_char[2] in self.logica_list:
+            self.next_char()
+            self.expressao()
+        elif self.current_char[2] == '!=' or self.current_char[2] == '==':
+            self.next_char()
+            self.exprelacionalb()
+    
+    #EXPRELACIONALB#
+    def exprelacionalb(self):
+        if self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] in self.aritmetica_list:
+                self.exparitmeticab()
+        elif self.current_char[1] == 'CAR':
+            return None
+        elif self.current_char[1] == 'NRO':
+            return None
+        elif self.current_char[1] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                return None
+        elif self.current_char[2] == '(':
+            self.next_char()
+            self.expressao()
+            self.next_char()
+            if self.current_char[2] == ')':
+                return None
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+
+    #EXPARITMETICA#
+    def exparitmetica(self):
+        if self.current_char[1] == 'IDE':
+            self.acessovar()
+            self.exparitmeticacont()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            self.exparitmeticacont()
+        elif self.current_char[2] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.exparitmeticacont()
+            else: self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == '(':
+            self.next_char()
+            self.exparitmeticaparen()
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPARITMETICAPAREN#
+    def exparitmeticaparen(self):
+        if self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] == ')':
+                self.next_char()
+                self.exparitmeticacontb()
+            else:
+                self.exparitmeticacont()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.next_char()
+                self.exparitmeticacontb()
+            else: 
+                self.exparitmeticacont()
+        elif self.current_char[2] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.exparitmeticacont()
+                self.next_char()
+                if self.current_char[2] == ')':
+                    self.exparitmeticacontb()
+                else: self.panic(self.current_char[0], ';')
+            else: 
+                self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == '(':
+            self.next_char()
+            self.exparitmeticaparen()
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.exparitmeticacontb()
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPEXPARITMETICACONT#
+    def exparitmeticacont(self):
+        if self.current_char[2] in self.aritmetica_list:
+            self.next_char()
+            self.exparitmeticab()
+    
+    #EXPARITMETICAB#
+    def exparitmeticab(self):
+        if self.current_char[1] == 'IDE':
+            self.acessovar()
+            self.exparitmeticacontb()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            self.exparitmeticacontb()
+        elif self.current_char[1] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.exparitmeticacontb()
+            else: self.panic(self.current_char[0], ';')
+        elif self.current_char[1] == '(':
+            self.next_char()
+            self.exparitmeticabparen()
+
+    #EXPARITMETICABPAREN#
+    def exparitmeticabparen(self):
+        if self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] == ')':
+                self.next_char()
+                self.exparitmeticacontb()
+            else:
+                self.exparitmeticab()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.next_char()
+                self.exparitmeticacontb()
+            else: 
+                self.exparitmeticab()
+        elif self.current_char[2] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.exparitmeticab()
+                self.next_char()
+                if self.current_char[2] == ')':
+                    self.exparitmeticacontb()
+                else: self.panic(self.current_char[0], ';')
+            else: 
+                self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == '(':
+            self.next_char()
+            self.exparitmeticabparen()
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.exparitmeticacontb()
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+    
+    #EXPARITMETICACONTB#
+    def exparitmeticacontb(self):
+        if self.current_char[2] in self.aritmetica_list:
+            self.next_char()
+            self.exparitmeticab()
+    
+    #EXPATRIBUICAO#
+    def expatribuicao(self):
+        self.valor()
+        self.next_char()
+        self.expatribuicaocont()
+
+    #EXPATRIBUICAOCONT#
+    def expatribuicaocont(self):
+        if self.current_char[2] in self.aritmetica_add_list:
+            self.next_char()
+            if self.current_char[2] == ';':
+                return None
+            else: self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == ';':
+            return None
+        else: self.panic(self.current_char[0], ';')
+    
+    #VAlOR#
+    def valor(self):
+        if self.current_char[1] == 'CAR':
+            return None
+        elif self.current_char[1] == 'CAD':
+            return None
+        #elif self.current_char[1] == falta chamada de funcao
+        #indeterminacao entre IDE, NRO, negativo, e (
+        if self.current_char[2] == '(':
+            self.next_char()
+            self.paran()
+        else:
+            self.expressaoalt()
+    
+    #EXPRESSAOALT#
+    def expressaoalt(self):
+        if self.current_char[2] in self.bool_list:
+            self.next_char()
+            self.expressaocontc()
+        elif self.current_char[2] == '!':
+            self.next_char()
+            self.exprexcalt()
+        elif self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] in self.relacional_list:
+                self.next_char()
+                self.exprelacionalb()
+            elif self.current_char[2] in self.logica_list:
+                self.next_char()
+                self.expressaoalt()
+            elif self.current_char[2] in self.aritmetica_list:
+                self.next_char()
+                self.exparitmeticab()
+                self.next_char()
+                self.expressaocontc()
+        elif self.current_char[1] == 'NRO':
+            self.next_char()
+            if self.current_char[2] in self.relacional_list:
+                self.next_char()
+                self.exprelacionalb()
+            elif self.current_char[2] in self.logica_list:
+                self.next_char()
+                self.expressaoalt()
+            elif self.current_char[2] in self.aritmetica_list:
+                self.next_char()
+                self.exparitmeticab()
+                self.next_char()
+                self.expressaocontc()
+        elif self.current_char[2] == '-':
+            self.next_char()
+            if self.current_char[1] == 'NRO':
+                self.next_char()
+                if self.current_char[2] in self.aritmetica_list:
+                    self.next_char()
+                    self.exparitmeticab()
+                    self.next_char()
+                    self.expressaocontc()
+                elif self.current_char[2] in self.relacional_list:
+                    self.next_char()
+                    self.exprelacionalb()
+                elif self.current_char[2] in self.logica_list:
+                    self.next_char()
+                    self.expressaoalt()
+        #repete quase que a mesma coisa, mas para iniciar com parênteses
+        elif self.current_char[2] == '(':
+            self.next_char()
+            if self.current_char[1] == 'IDE':
+                self.acessovar()
+                if self.current_char[2] == ')':
+                    self.next_char()
+                    self.exparitmeticacontc()
+                else:
+                    if self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressaoalt()
+                    elif self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocontc()
+                    else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == 'NRO':
+                self.next_char()
+                if self.current_char[2] == ')':
+                    self.next_char()
+                    self.exparitmeticacontc()
+                else:
+                    if self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocontc()
+                    elif self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressaoalt()
+                    else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == '-':
+                self.next_char()
+                if self.current_char[1] == 'NRO':
+                    self.next_char()
+                    if self.current_char[2] in self.aritmetica_list:
+                        self.next_char()
+                        self.exparitmeticab()
+                        self.next_char()
+                        self.expressaocontc()
+                    elif self.current_char[2] in self.relacional_list:
+                        self.next_char()
+                        self.exprelacionalb()
+                    elif self.current_char[2] in self.logica_list:
+                        self.next_char()
+                        self.expressaoalt()
+                    else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char[0], ';')
+            elif self.current_char[2] == '!':
+                self.next_char()
+                self.exprexcalt()
+            elif self.current_char[2] in self.bool_list:
+                self.next_char()
+                self.expressaocontc()
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+
+    #EXPREXCALT#
+    def exprexcalt(self):
+        if self.current_char[2] == '(':
+            self.next_char()
+            self.expressaoalt()
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.expressaocontc()
+            else: self.panic(self.current_char[0], ';')
+        elif self.current_char[2] in self.bool_list:
+            self.next_char()
+            self.expressaocontc()
+        elif self.current_char[1] == 'IDE':
+            self.acessovar()
+            self.expressaocontc()
+        else: self.panic(self.current_char[0], ';')
+
+    #EXPRESSAOCONTC#
+    def expressaocontc(self):
+        if self.current_char[2] in self.logica_list:
+            self.next_char()
+            self.expressaoalt()
+        elif self.current_char[2] in self.relacional_list:
+            self.next_char()
+            self.exprelacionalb()
 
     ##VARIAVEIS##
     def variaveis(self):
@@ -340,49 +822,50 @@ class Parser:
             self.vetor()
         elif self.current_char[2] == '}':
             self.next_char()
+
     
-    def valor(self):
-        if self.current_char[1] == 'NRO':
-            return None
-        #indeterminacao entre -<NEGATIVO> e -<NEGATIVO><EXPARITMETICACONT>
-        elif self.current_char[2] == '-':#pode ser valor negativo ou expressão aritmetica negativa. Nos dois casos ele vai ser -<negativo>, <negativo> pode ser um acessovar ou um nro
-            self.next_char()
-            if self.current_char[1] == 'NRO':
-                self.next_char()
-                if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-                    self.exparitmeticab()
-                elif self.current_char[2] == '--' or self.current_char[2] == '++':
-                    return None
-                else: self.prev_char()# se ele for um -nro e não for mais nada de exparitmetica depois quer dizer que esse elemento já acabou então eu volto um character
-            elif self.current_char[1] == 'IDE':
-                self.acessovar()#acessovar já pula de character no final por causa da forma de sua construção
-                if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-                    self.exparitmeticab()
-                elif self.current_char[2] == '--' or self.current_char[2] == '++':
-                    return None
-                else: self.prev_char()
-        elif self.current_char[1] == 'IDE':#indeterminação entre: explogica, exparitmetica, exprelacional, acessovar
-            self.acessovar()
-            if self.current_char[2] == '&&' or self.current_char[2] == '||':
-                self.next_char()
-                self.explogica()
-                self.next_char()
-                if self.current_char[2] == '==' or self.current_char[2] == '!=':
-                    self.exprelacionalb()
-                else: self.prev_char()
-            elif self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-                    self.exparitmeticab()
-                    #self.next_char()
-                    #if self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '>=' or self.current_char[2] == '<=' or self.current_char[2] == '<' or self.current_char[2] == '>'
-            elif self.current_char[2] == '--' or self.current_char[2] == '++':
-                    return None
-        elif self.current_char[1] == 'PRE':
-            return None#deve ter a indeterminação
-        elif self.current_char[1] == 'CAR':
-            return None
-        elif self.current_char[1] == 'CAD':
-            return None
-        else: self.panic(self.current_char[0], ';')
+    # def valor(self):
+    #     if self.current_char[1] == 'NRO':
+    #         return None
+    #     #indeterminacao entre -<NEGATIVO> e -<NEGATIVO><EXPARITMETICACONT>
+    #     elif self.current_char[2] == '-':#pode ser valor negativo ou expressão aritmetica negativa. Nos dois casos ele vai ser -<negativo>, <negativo> pode ser um acessovar ou um nro
+    #         self.next_char()
+    #         if self.current_char[1] == 'NRO':
+    #             self.next_char()
+    #             if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+    #                 self.exparitmeticab()
+    #             elif self.current_char[2] == '--' or self.current_char[2] == '++':
+    #                 return None
+    #             else: self.prev_char()# se ele for um -nro e não for mais nada de exparitmetica depois quer dizer que esse elemento já acabou então eu volto um character
+    #         elif self.current_char[1] == 'IDE':
+    #             self.acessovar()#acessovar já pula de character no final por causa da forma de sua construção
+    #             if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+    #                 self.exparitmeticab()
+    #             elif self.current_char[2] == '--' or self.current_char[2] == '++':
+    #                 return None
+    #             else: self.prev_char()
+    #     elif self.current_char[1] == 'IDE':#indeterminação entre: explogica, exparitmetica, exprelacional, acessovar
+    #         self.acessovar()
+    #         if self.current_char[2] == '&&' or self.current_char[2] == '||':
+    #             self.next_char()
+    #             self.explogica()
+    #             self.next_char()
+    #             if self.current_char[2] == '==' or self.current_char[2] == '!=':
+    #                 self.exprelacionalb()
+    #             else: self.prev_char()
+    #         elif self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
+    #                 self.exparitmeticab()
+    #                 #self.next_char()
+    #                 #if self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '>=' or self.current_char[2] == '<=' or self.current_char[2] == '<' or self.current_char[2] == '>'
+    #         elif self.current_char[2] == '--' or self.current_char[2] == '++':
+    #                 return None
+    #     elif self.current_char[1] == 'PRE':
+    #         return None#deve ter a indeterminação
+    #     elif self.current_char[1] == 'CAR':
+    #         return None
+    #     elif self.current_char[1] == 'CAD':
+    #         return None
+    #     else: self.panic(self.current_char[0], ';')
 
         # elif self.current_char[1] == 'BOOL':#se ele for um booleano ele pode ir para dois caminhos, então se checa o que vem depois para saber qual caminho seguir
         #     self.next_char()
@@ -476,48 +959,6 @@ class Parser:
         if self.current_char[2] != 'verdadeiro' and self.current_char[2] != 'falso':
             self.panic(self.current_char[0], ';')
     
-    #SE#
-    def se(self):
-        #INDETERMINAÇÕES#
-        if self.current_char[1] == 'IDE':
-            self.acessovar()#como o acessovar pode ser utilizado em outras produções, é melhor eu mandar para o acessovar com o current_char sendo tipo IDE, para que ele possa sempre checar se é realmente IDE
-            if self.current_char[1] == 'LOG':
-                self.explogicacont()
-            elif self.current_char[2] == ')': return None#caso ele seja apenas um acessovar sozinho
-
-        elif self.current_char[2] == '(':#expressão lógica, expressão relacional
-            self.next_char()
-            if self.current_char[1] == 'IDE':#chama acessovar?
-                self.next_char()
-                if self.current_char[1] == 'LOG':#O operador lógico pode ser uma expressão lógica sozinha, ou uma expressão lógica dentro de uma expressão relacionla, por isso tem que checar o que vem depois
-                    self.next_char()
-                    self.explogica()
-                elif(self.current_char[2] == '>' or self.current_char[2] == '<' or self.current_char[2] == '>=' or self.current_char[2] == '<='
-                     or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '+' or self.current_char[2] == '-'
-                     or self.current_char[2] == '*' or self.current_char[2] == '/' or self.current_char[2] == '--' or self.current_char[2] == '++'):#o que vem depois do ide nas produções
-                     self.next_char()
-                     self.exprelacional()
-
-
-
-        elif self.current_char[2] == '!':#expressão lógica, expressão relacional
-            self.explogica()
-
-        elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':#booleano, expressão lógica, expressão relacional
-            self.explogica()
-
-        #EXPRELACIONAL#
-        elif self.current_char[1] == 'NRO' or self.current_char[2] == '-':
-            self.exprelacional()
-
-        # elif self.curren_char[2] == 'verdadeiro' or if self.current_char[2] == 'falso':
-        # elif self.curren_char[1] == 'NRO':
-        # elif self.curren_char[2] == '-':
-        # elif self.current_char[2] == '!':
-        # elif self.current_char[2] == '(':
-        # elif self.current_char[1] == 'CHAR':     
-        # elif(self.current_char[2] == '<' or self.current_char[2] == '>' or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '(' or self.current_char[2] == '-'
-                 #or self.current_char[2] == '<=' or self.current_char[2] == '>=' or self.current_char[1] == 'IDE' or self.current_char[1] == 'CHAR' or self.current_char[1] == 'NRO'):   
     
     #ACESSOVAR#
     def acessovar(self):
@@ -578,4 +1019,134 @@ class Parser:
         while self.current_char[2] != stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
                 break
+
+
+    #SE#
+    # def se(self):
+    #     #INDETERMINAÇÕES#
+    #     if self.current_char[1] == 'IDE':
+    #         self.acessovar()#como o acessovar pode ser utilizado em outras produções, é melhor eu mandar para o acessovar com o current_char sendo tipo IDE, para que ele possa sempre checar se é realmente IDE
+    #         if self.current_char[1] == 'LOG':
+    #             self.explogicacont()
+    #         elif self.current_char[2] == ')': return None#caso ele seja apenas um acessovar sozinho
+
+    #     elif self.current_char[2] == '(':#expressão lógica, expressão relacional
+    #         self.next_char()
+    #         if self.current_char[1] == 'IDE':#chama acessovar?
+    #             self.next_char()
+    #             if self.current_char[1] == 'LOG':#O operador lógico pode ser uma expressão lógica sozinha, ou uma expressão lógica dentro de uma expressão relacionla, por isso tem que checar o que vem depois
+    #                 self.next_char()
+    #                 self.explogica()
+    #             elif(self.current_char[2] == '>' or self.current_char[2] == '<' or self.current_char[2] == '>=' or self.current_char[2] == '<='
+    #                  or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '+' or self.current_char[2] == '-'
+    #                  or self.current_char[2] == '*' or self.current_char[2] == '/' or self.current_char[2] == '--' or self.current_char[2] == '++'):#o que vem depois do ide nas produções
+    #                  self.next_char()
+    #                  self.exprelacional()
+    # def se(self):
+    #     #eu tenho que ter casos de indeterminação para quando ele começa com "(", e ver se ele vai ser uma expressão lógica, uma expressão relacional dentro de uma expresão
+    #     #lógica, ou até uma expressão aritmetica dentro de uma expressão relacional dentro de uma expressão lógica. E eu também tenho que checar todos esses casos para quando
+    #     #ele começa com IDE, ou quando ele começa com um próprio número, ou todos os casos que podem iniciar uma expressão relacional/aritmética
+    #     if self.current_char[2] == '!':
+    #         self.explogicaexc()
+    #     elif self.current_char[2] == '(':#esse vai ser a mesma coisa das produções de baixo porque tem indeterminação no "(", mas acho que ele funciona por recursão
+    #         self.explogica()
+    #         self.next_char()
+    #         if self.current_char[2] == ')':
+    #             self.explogicacont()
+    #         else: self.panic(self.current_char[0], ';')
+    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':
+    #         self.next_char()
+    #         self.explogicacont()
+    #     elif self.current_char[1] == 'IDE':#indeterminação entre acessovar e exprelacional. E eu tenho que ter a mesma coisa para o caso de não começar com IDE
+    #         self.acessovar()
+    #         #basicamente depois de uma expressão lógica começar com IDE, ela pode continuar como uma expressão lógica normal, a && b, ou pode ter uma expressão relacional
+    #         #dentro de uma expressão lógica, ou pode ter uma expressão aritmetica dentro de uma relacional, que por sua vez está dentro da expressão lógica.
+    #         if self.current_char[1] == 'LOG':
+    #             self.explogica()
+    #         #expressão relacional dentro de logica
+    #         elif(self.current_char[2] in self.relacional_list):
+    #             self.next_char()
+    #             self.exprelacionalb()#depois eu tenho que conferir e chamar o termino da expressão lógica
+    #             self.next_char()
+    #             if self.current_char[2] == '&&' or self.current_char[2] == '||':
+    #                 self.explogica()
+    #         #expressão aritmetica dentro de uma relacional dentro de uma logica
+    #         elif(self.current_char[2] in self.aritmetica_list):#se for uma expressão aritmética dentro de uma expressão relacional dentro de uma expressão lógica. Eu chamo a aritmética e depois chamo relacionalcont e depois checa para ver o lógico que vem depois
+    #             self.next_char()
+    #             self.exparitmeticab()
+    #         elif self.current_char[2] in self.aritmetica_add_list:#depois de '--' '++' tem que vir um operador relacional?
+    #             self.next_char()
+    #             if self.current_char[2] in self.relacional_list:#expressão relacional e depois a finalização da expressão lógica
+    #                 self.exprelacional()
+    #                 self.next_char()
+    #                 if self.current_char[2] in self.logica_list:
+    #                     self.explogica()
+    #                 else: self.panic(self.current_char[0], ';')
+    #             else: self.panic(self.current_char[0], ';')
+    #         else: self.panic(self.current_char[0], ';')
+
+
+
+    #     elif self.current_char[2] == '!':#expressão lógica
+    #         self.explogica()
+
+    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':#booleano, expressão lógica, expressão relacional
+    #         self.explogica()
+
+    #     #EXPRELACIONAL#
+    #     elif self.current_char[1] == 'NRO' or self.current_char[2] == '-':
+    #         self.exprelacional()
+
+        # elif self.curren_char[2] == 'verdadeiro' or if self.current_char[2] == 'falso':
+        # elif self.curren_char[1] == 'NRO':
+        # elif self.curren_char[2] == '-':
+        # elif self.current_char[2] == '!':
+        # elif self.current_char[2] == '(':
+        # elif self.current_char[1] == 'CHAR':     
+        # elif(self.current_char[2] == '<' or self.current_char[2] == '>' or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '(' or self.current_char[2] == '-'
+                 #or self.current_char[2] == '<=' or self.current_char[2] == '>=' or self.current_char[1] == 'IDE' or self.current_char[1] == 'CHAR' or self.current_char[1] == 'NRO'):   
+
+    #EXPLOGICA#
+    # def se(self):
+    #     #eu tenho que ter casos de indeterminação para quando ele começa com "(", e ver se ele vai ser uma expressão lógica, uma expressão relacional dentro de uma expresão
+    #     #lógica, ou até uma expressão aritmetica dentro de uma expressão relacional dentro de uma expressão lógica. E eu também tenho que checar todos esses casos para quando
+    #     #ele começa com IDE, ou quando ele começa com um próprio número, ou todos os casos que podem iniciar uma expressão relacional/aritmética
+    #     if self.current_char[2] == '!':
+    #         self.explogicaexc()
+    #     elif self.current_char[2] == '(':#esse vai ser a mesma coisa das produções de baixo porque tem indeterminação no "(", mas acho que ele funciona por recursão
+    #         self.explogica()
+    #         self.next_char()
+    #         if self.current_char[2] == ')':
+    #             self.explogicacont()
+    #         else: self.panic(self.current_char[0], ';')
+    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':
+    #         self.next_char()
+    #         self.explogicacont()
+    #     elif self.current_char[1] == 'IDE':#indeterminação entre acessovar e exprelacional. E eu tenho que ter a mesma coisa para o caso de não começar com IDE
+    #         self.acessovar()
+    #         #basicamente depois de uma expressão lógica começar com IDE, ela pode continuar como uma expressão lógica normal, a && b, ou pode ter uma expressão relacional
+    #         #dentro de uma expressão lógica, ou pode ter uma expressão aritmetica dentro de uma relacional, que por sua vez está dentro da expressão lógica.
+    #         if self.current_char[1] == 'LOG':
+    #             self.explogica()
+    #         #expressão relacional dentro de logica
+    #         elif(self.current_char[2] in self.relacional_list):
+    #             self.next_char()
+    #             self.exprelacionalb()#depois eu tenho que conferir e chamar o termino da expressão lógica
+    #             self.next_char()
+    #             if self.current_char[2] == '&&' or self.current_char[2] == '||':
+    #                 self.explogica()
+    #         #expressão aritmetica dentro de uma relacional dentro de uma logica
+    #         elif(self.current_char[2] in self.aritmetica_list):#se for uma expressão aritmética dentro de uma expressão relacional dentro de uma expressão lógica. Eu chamo a aritmética e depois chamo relacionalcont e depois checa para ver o lógico que vem depois
+    #             self.next_char()
+    #             self.exparitmeticab()
+    #         elif self.current_char[2] in self.aritmetica_add_list:#depois de '--' '++' tem que vir um operador relacional?
+    #             self.next_char()
+    #             if self.current_char[2] in self.relacional_list:#expressão relacional e depois a finalização da expressão lógica
+    #                 self.exprelacional()
+    #                 self.next_char()
+    #                 if self.current_char[2] in self.logica_list:
+    #                     self.explogica()
+    #                 else: self.panic(self.current_char[0], ';')
+    #             else: self.panic(self.current_char[0], ';')
+    #         else: self.panic(self.current_char[0], ';')
             
