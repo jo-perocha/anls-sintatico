@@ -184,7 +184,7 @@ class Parser:
             elif self.current_char[2] in self.logica_list:
                 self.next_char()
                 print(self.current_char[2])
-                self.expressao()
+                self.expressaorelend()#outra expressão que vai poder ter a continuação de uma expressao logica ou o final?
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
                 self.exparitmeticab()
