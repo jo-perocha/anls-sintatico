@@ -1,4 +1,5 @@
-from types import coroutine
+#from _typeshed import StrOrBytesPath
+from types import coroutine, prepare_class
 from typing import Counter
 import anl_lex
 from anl_lex import Token
@@ -182,6 +183,7 @@ class Parser:
                 self.exprelacionalb()
             elif self.current_char[2] in self.logica_list:
                 self.next_char()
+                print(self.current_char[2])
                 self.expressao()
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
@@ -628,6 +630,69 @@ class Parser:
             self.next_char()
             self.exprelacionalb()
 
+    #SE#
+    def se(self):
+        if self.current_char[2] in self.bool_list:
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.next_char()
+                if self.current_char[2] == '{':
+                    self.next_char()
+                    self.conteudo()
+                    self.next_char()
+                    if self.current_char[2] == '}':
+                        self.next_char()
+                        self.senao()
+                    else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.prev_char(); self.seexpressao()
+        elif self.current_char[1] == 'IDE':
+            self.next_char()
+            if self.current_char[2] == ')':
+                self.next_char()
+                if self.current_char[2] == '{':
+                    self.next_char()
+                    self.conteudo()
+                    self.next_char()
+                    if self.current_char[2] == '}':
+                        self.next_char()
+                        self.senao()
+                    else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char[0], ';')
+            else: self.prev_char(); self.seexpressao()
+        else: self.seexpressao()
+    
+    #SEEXPRESSAO#
+    def seexpressao(self):
+        self.expressao()
+        self.next_char()
+        if self.current_char[2] == ')':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()
+                self.next_char()
+                if self.current_char[2] == '}':
+                    self.next_char()
+                    self.senao()
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
+
+    #SENAO#
+    def senao(self):
+        if self.current_char[2] == 'senao':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()
+                self.next_char()
+                if self.current_char[2] == '}':
+                    return None
+                else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char[0], ';')
+        else: return None
+
     ##VARIAVEIS##
     def variaveis(self):
         if self.current_char[2] == '{':
@@ -1012,7 +1077,7 @@ class Parser:
         self.pars_res.append(error)
         #print("I wasn't supposed to be here!")
     
-    def panic(self, error_line, stop_char):
+    def panic(self, error_line, stop_char, debug = 'normal'):
         self.counter += 1
         error_message = 'Erro Sintático na linha: ' + str(error_line)
         self.pars_res.append(error_message)
