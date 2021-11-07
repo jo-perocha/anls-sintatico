@@ -40,6 +40,8 @@ class Parser:
                 arr.append(lexeme)
                 self.lexeme_matrix.append(arr)
                 arr = []
+        
+        #self.lexeme_matrix.append([-1, 'END', '$'])
     
     def get_current_char(self, pos):
         self.make_matrix()
@@ -64,6 +66,12 @@ class Parser:
     def doParsing(self):
         self.pars_res = []
         if len(self.lex_array) > 0:# roda se houver algum resultado do analisador léxico
+            self.current_char = self.get_current_char(0)# ele precisa iniciar o current_char, mas depois o next char já atualiza automaticamente o current_char
+            #isso aqui é para colocar o '$' como símbolo final da cadeia de lexemas
+            size = len(self.lexeme_matrix); size -= 1
+            aux = self.lexeme_matrix[size]
+            self.lexeme_matrix.append([aux[0], 'END', '$'])
+            ##
             self.start()# inicia a cadeia de leitura da gramática
         return self.pars_res#onde vão ser colocados os erros sintáticos ou a mensagem de sucesso no final do programa
 
@@ -73,11 +81,11 @@ class Parser:
 
     ##START##
     def start(self):
-        self.current_char = self.get_current_char(0)# ele precisa iniciar o current_char, mas depois o next char já atualiza automaticamente o current_char
         if self.current_char[2] == "algoritmo":
             self.next_char()
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
+            #ele tá chamando funcao e start varias vezes, ele tá chamando funcao, funcao chama start, em start ele reseta o current char para 'funcao'
             self.next_char()
             self.funcao()
             self.start()
@@ -95,15 +103,88 @@ class Parser:
             self.start()
         else: self.erro('CMMF')
 
+    #FUNCAO#
+    def funcao(self):
+        if self.current_char[2] == '[':
+            self.tipocont()
+            if self.current_char[1] == 'IDE':
+                self.next_char()
+                self.funcaoinit() 
+        self.tipo()
+        self.next_char()
+        self.tipocont()
+        if self.current_char[1] == 'IDE':
+            self.next_char()
+            self.funcaoinit() 
+    
+    #TIPOCONT#
+    def tipocont(self):
+        if self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[2] == ']':
+                self.vetormais()
+            else: self.panic(self.current_char[0], ';')
+        else: return None
+
+    #VETORMAIS#
+    def vetormais(self):
+        if self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[2] == ']':
+                self.vetormaisum()
+            else: self.panic(self.current_char[0], ';')
+        else: self.next_char()
+    
+    #VETORMAISUM#
+    def vetormaisum(self):
+        if self.current_char[2] == '[':
+            self.next_char()
+            if self.current_char[2] == ']':
+                self.next_char()
+            else: self.panic(self.current_char[0], ';')
+        else: self.next_char()
+
+    #FUNCAOINIT#
+    def funcaoinit(self):
+        if self.current_char[2] == '(':
+            self.next_char()
+            self.paraninit()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()
+                if self.current_char[2] == '}':
+                    self.next_char()#talvez esse não deva estar aqui
+    
+    #PARANINIT#
+    def paraninit(self):
+        self.tipo()
+        self.next_char()
+        if self.current_char[1] == 'IDE':
+            self.next_char()
+            self.paraninitcont()
+        else: self.panic(self.current_char[0], ';')
+
+    #PARANINITCONT#
+    def paraninitcont(self):
+        if self.current_char[2] == ',':
+            self.next_char()
+            self.paraninit()
+        elif self.current_char[2] == ')':
+            self.next_char()
+
     ##ALGORITMO##
     def algoritmo(self):
         if self.current_char[2] == '{':
             self.next_char()
-            if self.conteudo():# se conteudo retornar verdadeiro quer dizer que não estava vazio então ele checa no final se foi fechado a chave, se retornar falso é porque ele estava vazio
-            #no final da checagem de conteúdo eu vejo se ele termina com um '}'
-                self.next_char()
-                if self.current_char[2] != '}':
-                    self.panic(self.current_char[0], ';')
+            # if self.conteudo():# se conteudo retornar verdadeiro quer dizer que não estava vazio então ele checa no final se foi fechado a chave, se retornar falso é porque ele estava vazio
+            # #no final da checagem de conteúdo eu vejo se ele termina com um '}'
+            #     self.next_char()
+            #     if self.current_char[2] != '}':
+            #         self.panic(self.current_char[0], ';')
+            self.conteudo()
+            if self.current_char[2] == '}':
+                return None
+            else: self.panic(self.current_char[0], ';')
         else: self.panic(self.current_char[0], ';')
 
     ##CONTEUDO##
@@ -113,7 +194,6 @@ class Parser:
         if self.current_char[2] == 'variaveis':
             self.next_char()
             self.variaveis()
-            self.next_char()
             self.conteudo()
         elif self.current_char[2] == 'constantes':
             self.next_char()
@@ -126,8 +206,9 @@ class Parser:
             if self.current_char[2] == '(':
                 self.next_char()
                 self.se()
-                self.next_char()
                 self.conteudo()
+                # if self.current_char[2] == '}':
+                #     self.next_char()
         elif self.current_char[2] == 'leia':
             self.next_char()
             self.leia()
@@ -143,24 +224,87 @@ class Parser:
             self.next_char()
             self.retorno()
             return True
-        elif self.current_char[2] == '}':#quer dizer que o conteudo foi 'conteudo{}'
-            self.next_char()
+        elif self.current_char[2] == '}':#quer dizer que o conteudo foi 'conteudo{}' NAO, NAO QUER DIZER NAO, pra ver se foi conteudo{}, eu posso checar se o char anterior é {. Do contrário é uma produção vazia 
             return False
         elif self.current_char[2] == ';':
             if not self.next_char():#é pra ver se tem next char?
                 return None
             else: self.prev_char()
-        else:self.panic(self.current_char[0], ';')
-    
-    #SE#
-    def se(self):
+        elif self.current_char[1] == 'IDE':
+            self.acessovar()
+            if self.current_char[2] == '=':
+                self.next_char()
+                self.expatribuicao()
+                self.conteudo()
+            else:self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == 'enquanto':
+            self.next_char()
+            if self.current_char[2] == '(':
+                self.next_char()
+                self.enquanto()
+                self.conteudo()
+            else:self.panic(self.current_char[0], ';')
+        elif self.current_char[2] == 'para':
+            self.next_char()
+            if self.current_char[2] == '(':
+                self.next_char()
+                self.acessovar()
+                if self.current_char[2] == '=':
+                    self.next_char()
+                    self.expatribuicao()
+                    if self.current_char[2] == ';':
+                        self.next_char()
+                        self.paracont()
+                        self.conteudo()
+                    else:self.panic(self.current_char[0], ';', '1')
+                else:self.panic(self.current_char[0], ';', '2')
+            else:self.panic(self.current_char[0], ';', '3')
+
+    #PARACONT#
+    def paracont(self):
         self.expressao()
+        if self.current_char[2] == ';':
+            self.next_char()
+            self.parafim()
+        else:self.panic(self.current_char[0], ';', '4')
+
+    #PARAFIM#
+    def parafim(self):
+        self.exparitmetica()
         self.next_char()
         if self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] == '{':
                 self.next_char()
-                self.conteudo()#talvez precise de um next char
+                self.conteudo()
+                if self.current_char[2] == '}':
+                    self.next_char()
+                else:self.panic(self.current_char[0], ';', '5')
+            else:self.panic(self.current_char[0], ';', '6')
+        else:self.panic(self.current_char[0], ';', '7')
+
+    #ENQUANTO#
+    def enquanto(self):
+        self.expressao()
+        if self.current_char[2] == ')':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()
+                if self.current_char[2] == '}':
+                    self.next_char()
+                else:self.panic(self.current_char[0], ';')
+            else:self.panic(self.current_char[0], ';')
+        else:self.panic(self.current_char[0], ';')
+
+    #SE#
+    def se(self):
+        self.expressao()
+        if self.current_char[2] == ')':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()
                     self.senao()
@@ -178,23 +322,22 @@ class Parser:
             self.exprexc()
         elif self.current_char[1] == 'IDE':
             self.acessovar()
-            if self.current_char[2] in self.relacional_list:
-                self.next_char()
-                self.exprelacionalb()
-            elif self.current_char[2] in self.logica_list:
-                self.next_char()
-                print(self.current_char[2])
-                self.expressaorelend()#outra expressão que vai poder ter a continuação de uma expressao logica ou o final?
-            elif self.current_char[2] in self.aritmetica_list:
+            # if self.current_char[2] in self.relacional_list:
+            #     self.next_char()
+            #     self.expressao()
+            # elif self.current_char[2] in self.logica_list:
+            #     self.next_char()
+            #     self.expressao()#outra expressão que vai poder ter a continuação de uma expressao logica ou o final?
+            if self.current_char[2] in self.aritmetica_list:
                 self.next_char()
                 self.exparitmeticab()
-                self.next_char()
                 self.expressaocont()
+            else: self.expressaocont()
         elif self.current_char[1] == 'NRO':
             self.next_char()
             if self.current_char[2] in self.relacional_list:
                 self.next_char()
-                self.exprelacionalb()
+                self.expressao()
             elif self.current_char[2] in self.logica_list:
                 self.next_char()
                 self.expressao()
@@ -214,10 +357,16 @@ class Parser:
                     self.expressaocont()
                 elif self.current_char[2] in self.relacional_list:
                     self.next_char()
-                    self.exprelacionalb()
+                    self.expressao()
                 elif self.current_char[2] in self.logica_list:
                     self.next_char()
                     self.expressao()
+        elif self.current_char[1] == 'CAR':
+            self.next_char()
+            self.expressaocont()
+        elif self.current_char[1] == 'CAD':
+            self.next_char()
+            self.expressaocont()
         #repete quase que a mesma coisa, mas para iniciar com parênteses
         elif self.current_char[2] == '(':
             self.next_char()
@@ -226,20 +375,17 @@ class Parser:
                 if self.current_char[2] == ')':
                     self.next_char()
                     self.exparitmeticacontb()
-                else:
-                    if self.current_char[2] in self.relacional_list:
-                        self.next_char()
-                        self.exprelacionalb()
-                    elif self.current_char[2] in self.logica_list:
-                        self.next_char()
-                        self.expressao()
-                    elif self.current_char[2] in self.aritmetica_list:
-                        self.next_char()
-                        self.exparitmeticab()
-                        self.next_char()
-                        self.expressaocont()
-                    else: self.panic(self.current_char[0], ';')
-            elif self.current_char[2] == 'NRO':
+                elif self.current_char[2] in self.aritmetica_list:
+                    self.next_char()
+                    self.exparitmeticab()
+                    self.expressaocont()
+                    # if self.current_char[2] in self.relacional_list:
+                    #     self.next_char()
+                    #     self.expressao()
+                    # elif self.cusrrent_char[2] in self.logica_list:
+                    #     self.next_char()
+                    #     self.expressao()#outra expressão que vai poder ter a continuação de uma expressao logica ou o final?    
+                else: self.expressaocont()
                 self.next_char()
                 if self.current_char[2] == ')':
                     self.next_char()
@@ -252,7 +398,7 @@ class Parser:
                         self.expressaocont()
                     elif self.current_char[2] in self.relacional_list:
                         self.next_char()
-                        self.exprelacionalb()
+                        self.expressao()
                     elif self.current_char[2] in self.logica_list:
                         self.next_char()
                         self.expressao()
@@ -268,7 +414,7 @@ class Parser:
                         self.expressaocont()
                     elif self.current_char[2] in self.relacional_list:
                         self.next_char()
-                        self.exprelacionalb()
+                        self.expressao()
                     elif self.current_char[2] in self.logica_list:
                         self.next_char()
                         self.expressao()
@@ -280,6 +426,12 @@ class Parser:
             elif self.current_char[2] in self.bool_list:
                 self.next_char()
                 self.expressaocont()
+            elif self.current_char[1] == 'CAR':
+                self.next_char()
+                self.expressaocont()
+            elif self.current_char[1] == 'CAD':
+                self.next_char()
+                self.exrpessaocont()
             else: self.panic(self.current_char[0], ';')
         else: self.panic(self.current_char[0], ';')
     
@@ -290,14 +442,14 @@ class Parser:
             self.expressao
             self.next_char()
             if self.current_char[2] == ')':
-                self.expressaocontb()
+                self.expressaocont()
             else: self.panic(self.current_char[0], ';')
         elif self.current_char[2] in self.bool_list:
             self.next_char()
-            self.expressaocontb()
+            self.expressaocont()
         elif self.current_char[1] == 'IDE': 
             self.acessovar()
-            self.expressaocontb()
+            self.expressaocont()
         else: self.panic(self.current_char[0], ';')
     
     #EXPRESSAOCONT#
@@ -307,41 +459,8 @@ class Parser:
             self.expressao()
         elif self.current_char[2] in self.relacional_list:
             self.next_char()
-            self.exprelacionalb()
-        else: self.panic(self.current_char[0], ';')
-    
-    #EXPRESSAOCONTB#
-    def expressaocontb(self):
-        if self.current_char[2] in self.logica_list:
-            self.next_char()
             self.expressao()
-        elif self.current_char[2] == '!=' or self.current_char[2] == '==':
-            self.next_char()
-            self.exprelacionalb()
     
-    #EXPRELACIONALB#
-    def exprelacionalb(self):
-        if self.current_char[1] == 'IDE':
-            self.acessovar()
-            if self.current_char[2] in self.aritmetica_list:
-                self.exparitmeticab()
-        elif self.current_char[1] == 'CAR':
-            return None
-        elif self.current_char[1] == 'NRO':
-            return None
-        elif self.current_char[1] == '-':
-            self.next_char()
-            if self.current_char[1] == 'NRO':
-                return None
-        elif self.current_char[2] == '(':
-            self.next_char()
-            self.expressao()
-            self.next_char()
-            if self.current_char[2] == ')':
-                return None
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
-
     #EXPARITMETICA#
     def exparitmetica(self):
         if self.current_char[1] == 'IDE':
@@ -458,214 +577,101 @@ class Parser:
         if self.current_char[2] in self.aritmetica_list:
             self.next_char()
             self.exparitmeticab()
+        else: return None
     
     #EXPATRIBUICAO#
     def expatribuicao(self):
-        self.valor()
-        self.next_char()
-        self.expatribuicaocont()
-
-    #EXPATRIBUICAOCONT#
-    def expatribuicaocont(self):
-        if self.current_char[2] in self.aritmetica_add_list:
-            self.next_char()
-            if self.current_char[2] == ';':
-                return None
-            else: self.panic(self.current_char[0], ';')
-        elif self.current_char[2] == ';':
-            return None
-        else: self.panic(self.current_char[0], ';')
-    
-    #VAlOR#
-    def valor(self):
-        if self.current_char[1] == 'CAR':
-            return None
-        elif self.current_char[1] == 'CAD':
-            return None
-        #elif self.current_char[1] == falta chamada de funcao
-        #indeterminacao entre IDE, NRO, negativo, e (
-        if self.current_char[2] == '(':
-            self.next_char()
-            self.paran()
-        else:
-            self.expressaoalt()
-    
-    #EXPRESSAOALT#
-    def expressaoalt(self):
-        if self.current_char[2] in self.bool_list:
-            self.next_char()
-            self.expressaocontc()
-        elif self.current_char[2] == '!':
-            self.next_char()
-            self.exprexcalt()
-        elif self.current_char[1] == 'IDE':
+        if self.current_char[1] == 'IDE':
             self.acessovar()
-            if self.current_char[2] in self.relacional_list:
-                self.next_char()
-                self.exprelacionalb()
-            elif self.current_char[2] in self.logica_list:
-                self.next_char()
-                self.expressaoalt()
+            if self.current_char[2] in self.aritmetica_add_list:
+                return None
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
                 self.exparitmeticab()
-                self.next_char()
-                self.expressaocontc()
+            else: return None
         elif self.current_char[1] == 'NRO':
             self.next_char()
-            if self.current_char[2] in self.relacional_list:
-                self.next_char()
-                self.exprelacionalb()
-            elif self.current_char[2] in self.logica_list:
-                self.next_char()
-                self.expressaoalt()
+            if self.current_char[2] in self.aritmetica_add_list:
+                return None
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
                 self.exparitmeticab()
-                self.next_char()
-                self.expressaocontc()
         elif self.current_char[2] == '-':
             self.next_char()
             if self.current_char[1] == 'NRO':
                 self.next_char()
-                if self.current_char[2] in self.aritmetica_list:
-                    self.next_char()
-                    self.exparitmeticab()
-                    self.next_char()
-                    self.expressaocontc()
-                elif self.current_char[2] in self.relacional_list:
-                    self.next_char()
-                    self.exprelacionalb()
-                elif self.current_char[2] in self.logica_list:
-                    self.next_char()
-                    self.expressaoalt()
-        #repete quase que a mesma coisa, mas para iniciar com parênteses
+                self.exparitmeticacont()
         elif self.current_char[2] == '(':
             self.next_char()
-            if self.current_char[1] == 'IDE':
-                self.acessovar()
-                if self.current_char[2] == ')':
-                    self.next_char()
-                    self.exparitmeticacontc()
-                else:
-                    if self.current_char[2] in self.relacional_list:
-                        self.next_char()
-                        self.exprelacionalb()
-                    elif self.current_char[2] in self.logica_list:
-                        self.next_char()
-                        self.expressaoalt()
-                    elif self.current_char[2] in self.aritmetica_list:
-                        self.next_char()
-                        self.exparitmeticab()
-                        self.next_char()
-                        self.expressaocontc()
-                    else: self.panic(self.current_char[0], ';')
-            elif self.current_char[2] == 'NRO':
+            self.exparitmeticaparen()
+    
+    #VALOR#
+    def valor(self):
+        if self.current_char[1] == 'IDE':
+            self.next_char()
+            if self.current_char[2] == '(':
                 self.next_char()
-                if self.current_char[2] == ')':
-                    self.next_char()
-                    self.exparitmeticacontc()
-                else:
-                    if self.current_char[2] in self.aritmetica_list:
-                        self.next_char()
-                        self.exparitmeticab()
-                        self.next_char()
-                        self.expressaocontc()
-                    elif self.current_char[2] in self.relacional_list:
-                        self.next_char()
-                        self.exprelacionalb()
-                    elif self.current_char[2] in self.logica_list:
-                        self.next_char()
-                        self.expressaoalt()
-                    else: self.panic(self.current_char[0], ';')
-            elif self.current_char[2] == '-':
-                self.next_char()
-                if self.current_char[1] == 'NRO':
-                    self.next_char()
-                    if self.current_char[2] in self.aritmetica_list:
-                        self.next_char()
-                        self.exparitmeticab()
-                        self.next_char()
-                        self.expressaocontc()
-                    elif self.current_char[2] in self.relacional_list:
-                        self.next_char()
-                        self.exprelacionalb()
-                    elif self.current_char[2] in self.logica_list:
-                        self.next_char()
-                        self.expressaoalt()
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            elif self.current_char[2] == '!':
-                self.next_char()
-                self.exprexcalt()
-            elif self.current_char[2] in self.bool_list:
-                self.next_char()
-                self.expressaocontc()
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+                self.paran()
+            else: self.prev_char(); self.expressao()
+        else: self.expressao()
 
-    #EXPREXCALT#
-    def exprexcalt(self):
-        if self.current_char[2] == '(':
-            self.next_char()
-            self.expressaoalt()
-            self.next_char()
-            if self.current_char[2] == ')':
-                self.expressaocontc()
-            else: self.panic(self.current_char[0], ';')
-        elif self.current_char[2] in self.bool_list:
-            self.next_char()
-            self.expressaocontc()
-        elif self.current_char[1] == 'IDE':
-            self.acessovar()
-            self.expressaocontc()
-        else: self.panic(self.current_char[0], ';')
+    #PARAN#
+    def paran(self):
+        if self.current_char[2] == ')':
+            return None
+        else: self.parancont()
+    
+    #PARACONT#
+    def parancont(self):
+        self.valor()
+        self.next_char()
+        self.paranfim()
 
-    #EXPRESSAOCONTC#
-    def expressaocontc(self):
-        if self.current_char[2] in self.logica_list:
+    #PARANFIM#
+    def paranfim(self):
+        if self.current_char[2] == ')':
+            return None
+        elif self.current_char[2] == ',':
             self.next_char()
-            self.expressaoalt()
-        elif self.current_char[2] in self.relacional_list:
-            self.next_char()
-            self.exprelacionalb()
+            self.parancont()
+        else: self.panic(self.current_char[0], ';')
 
     #SE#
-    def se(self):
-        if self.current_char[2] in self.bool_list:
-            self.next_char()
-            if self.current_char[2] == ')':
-                self.next_char()
-                if self.current_char[2] == '{':
-                    self.next_char()
-                    self.conteudo()
-                    self.next_char()
-                    if self.current_char[2] == '}':
-                        self.next_char()
-                        self.senao()
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.prev_char(); self.seexpressao()
-        elif self.current_char[1] == 'IDE':
-            self.next_char()
-            if self.current_char[2] == ')':
-                self.next_char()
-                if self.current_char[2] == '{':
-                    self.next_char()
-                    self.conteudo()
-                    self.next_char()
-                    if self.current_char[2] == '}':
-                        self.next_char()
-                        self.senao()
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.prev_char(); self.seexpressao()
-        else: self.seexpressao()
+    # def se(self):
+    #     print('hi')
+    #     if self.current_char[2] in self.bool_list:
+    #         self.next_char()
+    #         if self.current_char[2] == ')':
+    #             self.next_char()
+    #             if self.current_char[2] == '{':
+    #                 self.next_char()
+    #                 self.conteudo()
+    #                 self.next_char()
+    #                 if self.current_char[2] == '}':
+    #                     self.next_char()
+    #                     self.senao()
+    #                 else: self.panic(self.current_char[0], ';')
+    #             else: self.panic(self.current_char[0], ';')
+    #         else: self.prev_char(); self.seexpressao()
+    #     elif self.current_char[1] == 'IDE':
+    #         self.next_char()
+    #         if self.current_char[2] == ')':
+    #             self.next_char()
+    #             if self.current_char[2] == '{':
+    #                 self.next_char()
+    #                 self.conteudo()
+    #                 self.next_char()
+    #                 if self.current_char[2] == '}':
+    #                     self.next_char()
+    #                     self.senao()
+    #                 else: self.panic(self.current_char[0], ';')
+    #             else: self.panic(self.current_char[0], ';')
+    #         else: self.prev_char(); self.seexpressao()
+    #     else: self.seexpressao()
     
     #SEEXPRESSAO#
     def seexpressao(self):
         self.expressao()
-        self.next_char()
         if self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] == '{':
@@ -686,9 +692,8 @@ class Parser:
             if self.current_char[2] == '{':
                 self.next_char()
                 self.conteudo()
-                self.next_char()
                 if self.current_char[2] == '}':
-                    return None
+                    self.next_char()
                 else: self.panic(self.current_char[0], ';')
             else: self.panic(self.current_char[0], ';')
         else: return None
@@ -714,7 +719,7 @@ class Parser:
             self.varfinal()
         else:
             self.varinit()
-            self.next_char()
+            #self.next_char()
             self.varfinal()
 
     ##VARFINAL##
@@ -753,7 +758,6 @@ class Parser:
         self.ide()
         self.next_char()
         self.varinit()
-        print(self.current_char[2])
         self.constcont()
     
     ##TIPO##
@@ -782,7 +786,6 @@ class Parser:
         if self.current_char[2] == '=':
             self.next_char()
             self.valor()
-            self.next_char()
             if self.current_char[2] != ',':
                 if self.current_char[2] == ';':
                     return None
@@ -877,7 +880,6 @@ class Parser:
     ##VETOR##
     def vetor(self):
         self.valor()
-        self.next_char()
         self.vetorcont()
 
     ##VETORCONT##
@@ -1079,7 +1081,7 @@ class Parser:
     
     def panic(self, error_line, stop_char, debug = 'normal'):
         self.counter += 1
-        error_message = 'Erro Sintático na linha: ' + str(error_line)
+        error_message = 'Syntax Error on line: ' + str(error_line) + '; debug: ' + debug
         self.pars_res.append(error_message)
         while self.current_char[2] != stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None

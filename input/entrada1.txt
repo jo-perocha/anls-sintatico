@@ -1,3 +1,41 @@
-algoritmo{
-    se(a && b){leia(a);}
+
+funcao inteiro test(inteiro id){leia(a);}
+algoritmo {
+    
+    constantes {
+        inteiro idade = 100;
+        cadeia nome = "mariana";
+        char sexo = 'F';
+        inteiro pontos[2] = {1,2};
+        real pontos[2] = {1.3,2.2};
+        char pontos[2] = {'o','k'};
+        cadeia pontos[2] = {"ola","mundo"};
+    }
+    escreva("Hello world!");
+    variaveis {
+        inteiro i,j,k;
+        cadeia nome = "mariana";
+        inteiro idade = 20;
+        cadeia nome = "mariana";
+        char sexo = 'F';
+        inteiro pontos[2] = {10, 20};
+        real pontos[2] = {1.3,2.2};
+        char pontos[2] = {'o','k'};
+        cadeia pontos[2] = {"ola","mundo"};
+	    booleano ans = verdadeiro;
+    }
+    
+    se(a || falso){a = 4 + 2;}senao{b = 2;}
+    se(a){escreva("ola");} senao{ se(b){ escreva("hello");} }
+    se((a+b > 4) && verdadeiro){escreva("alo");}senao{escreva("ola");}
+    se(a){escreva("ola");}senao{leia(a);}
+    se(5 != 3){escreva("realmente");}
+    se(5 >= 3){leia(uno);}senao{leia(dos);}
+    enquanto(a){escreva("oi");}
+    enquanto(a >= b){leia(b); se(a > b){escreva("hello world");}}
+    para(a = 0; a <= 10; a++){leia(a);}
 }
+
+
+
+    

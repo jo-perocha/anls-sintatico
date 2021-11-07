@@ -140,7 +140,7 @@ class Lexer:
         #                         
         # ESPAÇO OU TAB
         #
-        if self.current_char in ' \t\n':
+        if str(self.current_char) in ' \t\n':
             self.next_char()
         #
         # IDENTIFICADORES
