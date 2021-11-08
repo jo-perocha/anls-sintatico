@@ -1,5 +1,8 @@
 
+
+variaveis{inteiro a = 2;}
 funcao inteiro test(inteiro id){leia(a);}
+registro struct{cadeia nome = "bola", caracteristica = "quadrada";}
 algoritmo {
     
     constantes {
@@ -26,6 +29,7 @@ algoritmo {
     }
     
     se(a || falso){a = 4 + 2;}senao{b = 2;}
+    se(a || falso){a = 4 + 2;}senao{retorno func("repete2", "naorepete");}
     se(a){escreva("ola");} senao{ se(b){ escreva("hello");} }
     se((a+b > 4) && verdadeiro){escreva("alo");}senao{escreva("ola");}
     se(a){escreva("ola");}senao{leia(a);}
@@ -34,6 +38,7 @@ algoritmo {
     enquanto(a){escreva("oi");}
     enquanto(a >= b){leia(b); se(a > b){escreva("hello world");}}
     para(a = 0; a <= 10; a++){leia(a);}
+    se(a == b){x = inicializafunc(vazio);}
 }
 
 

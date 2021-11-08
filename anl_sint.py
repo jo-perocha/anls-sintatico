@@ -83,9 +83,9 @@ class Parser:
     def start(self):
         if self.current_char[2] == "algoritmo":
             self.next_char()
+            print(self.pars_res)
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
-            #ele tá chamando funcao e start varias vezes, ele tá chamando funcao, funcao chama start, em start ele reseta o current char para 'funcao'
             self.next_char()
             self.funcao()
             self.start()
@@ -101,7 +101,70 @@ class Parser:
             self.next_char()
             self.registro()
             self.start()
-        else: self.erro('CMMF')
+        else: self.panic(self.current_char[0], ';')
+    
+    #a#
+    def a(self):
+        if self.current_char[2] == "algoritmo":
+            self.next_char()
+            self.algoritmo()
+        elif self.current_char[2] == 'funcao':
+            self.next_char()
+            self.funcao()
+            self.a()
+        elif self.current_char[2] == 'constantes':
+            self.next_char()
+            self.constantes()
+            self.c()
+        elif self.current_char[2] == 'registro':
+            self.next_char()
+            self.registro()
+            self.a()
+        else: self.panic(self.current_char[0], ';')
+    
+    #b#
+    def b(self):
+        if self.current_char[2] == "algoritmo":
+            self.next_char()
+            self.algoritmo()
+        elif self.current_char[2] == 'funcao':
+            self.next_char()
+            self.funcao()
+            self.b()
+        elif self.current_char[2] == 'variaveis':
+            self.next_char()
+            self.variaveis()
+            self.c()
+        elif self.current_char[2] == 'registro':
+            self.next_char()
+            self.registro()
+            self.b()
+        else: self.panic(self.current_char[0], ';')
+    
+    #c#
+    def c(self):
+        if self.current_char[2] == "algoritmo":
+            self.next_char()
+            self.algoritmo()
+        elif self.current_char[2] == 'funcao':
+            self.next_char()
+            self.funcao()
+            self.c()
+        elif self.current_char[2] == 'registro':
+            self.next_char()
+            self.registro()
+            self.c()
+        else: self.panic(self.current_char[0], ';')
+
+    #REGISTRO#
+    def registro(self):
+        if self.current_char[1] == 'IDE':
+            self.next_char()
+            if self.current_char[2] == '{':
+                self.next_char()
+                self.var()#ele já checa o fechamento de }
+            else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';')
 
     #FUNCAO#
     def funcao(self):
@@ -171,6 +234,13 @@ class Parser:
             self.paraninit()
         elif self.current_char[2] == ')':
             self.next_char()
+    
+    #CHAMADAFUNCAO#
+    def chamadafuncao(self):
+        self.acessovar()
+        if self.current_char[2] == '(':
+            self.next_char()
+            self.paran()
 
     ##ALGORITMO##
     def algoritmo(self):
@@ -223,6 +293,7 @@ class Parser:
         elif self.current_char[2] == 'retorno':
             self.next_char()
             self.retorno()
+            self.next_char()
             return True
         elif self.current_char[2] == '}':#quer dizer que o conteudo foi 'conteudo{}' NAO, NAO QUER DIZER NAO, pra ver se foi conteudo{}, eu posso checar se o char anterior é {. Do contrário é uma produção vazia 
             return False
@@ -256,9 +327,9 @@ class Parser:
                         self.next_char()
                         self.paracont()
                         self.conteudo()
-                    else:self.panic(self.current_char[0], ';', '1')
-                else:self.panic(self.current_char[0], ';', '2')
-            else:self.panic(self.current_char[0], ';', '3')
+                    else:self.panic(self.current_char[0], ';')
+                else:self.panic(self.current_char[0], ';')
+            else:self.panic(self.current_char[0], ';')
 
     #PARACONT#
     def paracont(self):
@@ -588,6 +659,9 @@ class Parser:
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
                 self.exparitmeticab()
+            elif self.current_char[2] == '(':
+                self.next_char()
+                self.paran()
             else: return None
         elif self.current_char[1] == 'NRO':
             self.next_char()
@@ -609,10 +683,12 @@ class Parser:
     def valor(self):
         if self.current_char[1] == 'IDE':
             self.next_char()
-            if self.current_char[2] == '(':
+            if self.current_char[2] == '(':#chamadafuncao()
                 self.next_char()
                 self.paran()
             else: self.prev_char(); self.expressao()
+        elif self.current_char[2] == 'vazio':
+            self.next_char()
         else: self.expressao()
 
     #PARAN#
@@ -624,17 +700,16 @@ class Parser:
     #PARACONT#
     def parancont(self):
         self.valor()
-        self.next_char()
         self.paranfim()
 
     #PARANFIM#
     def paranfim(self):
         if self.current_char[2] == ')':
-            return None
+            self.next_char()
         elif self.current_char[2] == ',':
             self.next_char()
             self.parancont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char[0], ';', '1')
 
     #SE#
     # def se(self):
@@ -732,7 +807,7 @@ class Parser:
             self.varfim()
 
     ##VARALT##
-    def varalt(self):
+    def varalt(self):#eu tenho que voltar a chamar var para o caso do registro?
         self.ide()
         self.next_char()
         self.varcont()
@@ -1018,7 +1093,6 @@ class Parser:
 
     def retorno(self):
         self.valor()
-        self.next_char()
         if self.current_char[2] != ";":
             self.panic(self.current_char[0], ';')
 
