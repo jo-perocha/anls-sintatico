@@ -101,7 +101,7 @@ class Parser:
             self.next_char()
             self.registro()
             self.start()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     #a#
     def a(self):
@@ -120,7 +120,7 @@ class Parser:
             self.next_char()
             self.registro()
             self.a()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     #b#
     def b(self):
@@ -139,7 +139,7 @@ class Parser:
             self.next_char()
             self.registro()
             self.b()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     #c#
     def c(self):
@@ -154,7 +154,7 @@ class Parser:
             self.next_char()
             self.registro()
             self.c()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
 
     #REGISTRO#
     def registro(self):
@@ -163,8 +163,8 @@ class Parser:
             if self.current_char[2] == '{':
                 self.next_char()
                 self.var()#ele já checa o fechamento de }
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, '{')
+        else: self.panic(self.current_char)
 
     #FUNCAO#
     def funcao(self):
@@ -186,7 +186,7 @@ class Parser:
             self.next_char()
             if self.current_char[2] == ']':
                 self.vetormais()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ']')
         else: return None
 
     #VETORMAIS#
@@ -195,7 +195,7 @@ class Parser:
             self.next_char()
             if self.current_char[2] == ']':
                 self.vetormaisum()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ']')
         else: self.next_char()
     
     #VETORMAISUM#
@@ -204,7 +204,7 @@ class Parser:
             self.next_char()
             if self.current_char[2] == ']':
                 self.next_char()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ']')
         else: self.next_char()
 
     #FUNCAOINIT#
@@ -217,6 +217,9 @@ class Parser:
                 self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()#talvez esse não deva estar aqui
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '}')
+        else: self.panic(self.current_char, ')')
     
     #PARANINIT#
     def paraninit(self):
@@ -225,7 +228,7 @@ class Parser:
         if self.current_char[1] == 'IDE':
             self.next_char()
             self.paraninitcont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, 'Token Type: IDE')
 
     #PARANINITCONT#
     def paraninitcont(self):
@@ -254,8 +257,8 @@ class Parser:
             self.conteudo()
             if self.current_char[2] == '}':
                 return None
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, '}')
+        else: self.panic(self.current_char, '}')
 
     ##CONTEUDO##
     def conteudo(self):
@@ -307,14 +310,14 @@ class Parser:
                 self.next_char()
                 self.expatribuicao()
                 self.conteudo()
-            else:self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, '=')
         elif self.current_char[2] == 'enquanto':
             self.next_char()
             if self.current_char[2] == '(':
                 self.next_char()
                 self.enquanto()
                 self.conteudo()
-            else:self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, '(')
         elif self.current_char[2] == 'para':
             self.next_char()
             if self.current_char[2] == '(':
@@ -327,9 +330,9 @@ class Parser:
                         self.next_char()
                         self.paracont()
                         self.conteudo()
-                    else:self.panic(self.current_char[0], ';')
-                else:self.panic(self.current_char[0], ';')
-            else:self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char, ';')
+                else: self.panic(self.current_char, '=')
+            else: self.panic(self.current_char, '(')
 
     #PARACONT#
     def paracont(self):
@@ -337,7 +340,7 @@ class Parser:
         if self.current_char[2] == ';':
             self.next_char()
             self.parafim()
-        else:self.panic(self.current_char[0], ';', '4')
+        else: self.panic(self.current_char, ';')
 
     #PARAFIM#
     def parafim(self):
@@ -350,9 +353,9 @@ class Parser:
                 self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()
-                else:self.panic(self.current_char[0], ';', '5')
-            else:self.panic(self.current_char[0], ';', '6')
-        else:self.panic(self.current_char[0], ';', '7')
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '{')
+        else: self.panic(self.current_char, ')')
 
     #ENQUANTO#
     def enquanto(self):
@@ -364,9 +367,9 @@ class Parser:
                 self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()
-                else:self.panic(self.current_char[0], ';')
-            else:self.panic(self.current_char[0], ';')
-        else:self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '{')
+        else: self.panic(self.current_char, ')')
 
     #SE#
     def se(self):
@@ -379,9 +382,9 @@ class Parser:
                 if self.current_char[2] == '}':
                     self.next_char()
                     self.senao()
-                else:self.panic(self.current_char[0], ';')
-            else:self.panic(self.current_char[0], ';')
-        else:self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '{')
+        else: self.panic(self.current_char, ')')
     
     #EXPRESSAO#
     def expressao(self):#começa com uma indeterminação entre expressão genérica e expressão aritmética
@@ -473,7 +476,7 @@ class Parser:
                     elif self.current_char[2] in self.logica_list:
                         self.next_char()
                         self.expressao()
-                    else: self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char)
             elif self.current_char[2] == '-':
                 self.next_char()
                 if self.current_char[1] == 'NRO':
@@ -489,8 +492,8 @@ class Parser:
                     elif self.current_char[2] in self.logica_list:
                         self.next_char()
                         self.expressao()
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char)
+                else: self.panic(self.current_char, 'Token Type: NRO')
             elif self.current_char[2] == '!':
                 self.next_char()
                 self.exprexc()
@@ -503,8 +506,8 @@ class Parser:
             elif self.current_char[1] == 'CAD':
                 self.next_char()
                 self.exrpessaocont()
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char)
+        else: self.panic(self.current_char)
     
     #EXPREXC#
     def exprexc(self):
@@ -514,14 +517,14 @@ class Parser:
             self.next_char()
             if self.current_char[2] == ')':
                 self.expressaocont()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ')')
         elif self.current_char[2] in self.bool_list:
             self.next_char()
             self.expressaocont()
         elif self.current_char[1] == 'IDE': 
             self.acessovar()
             self.expressaocont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     #EXPRESSAOCONT#
     def expressaocont(self):
@@ -544,11 +547,11 @@ class Parser:
             self.next_char()
             if self.current_char[1] == 'NRO':
                 self.exparitmeticacont()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         elif self.current_char[2] == '(':
             self.next_char()
             self.exparitmeticaparen()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     #EXPARITMETICAPAREN#
     def exparitmeticaparen(self):
@@ -573,17 +576,16 @@ class Parser:
                 self.next_char()
                 if self.current_char[2] == ')':
                     self.exparitmeticacontb()
-                else: self.panic(self.current_char[0], ';')
-            else: 
-                self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ')')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         elif self.current_char[2] == '(':
             self.next_char()
             self.exparitmeticaparen()
             self.next_char()
             if self.current_char[2] == ')':
                 self.exparitmeticacontb()
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ')')
+        else: self.panic(self.current_char)
     
     #EXPEXPARITMETICACONT#
     def exparitmeticacont(self):
@@ -603,7 +605,7 @@ class Parser:
             self.next_char()
             if self.current_char[1] == 'NRO':
                 self.exparitmeticacontb()
-            else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         elif self.current_char[1] == '(':
             self.next_char()
             self.exparitmeticabparen()
@@ -631,17 +633,16 @@ class Parser:
                 self.next_char()
                 if self.current_char[2] == ')':
                     self.exparitmeticacontb()
-                else: self.panic(self.current_char[0], ';')
-            else: 
-                self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ')')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         elif self.current_char[2] == '(':
             self.next_char()
             self.exparitmeticabparen()
             self.next_char()
             if self.current_char[2] == ')':
                 self.exparitmeticacontb()
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+            else: self.panic(self.current_char, ')')
+        else: self.panic(self.current_char)
     
     #EXPARITMETICACONTB#
     def exparitmeticacontb(self):
@@ -709,7 +710,7 @@ class Parser:
         elif self.current_char[2] == ',':
             self.next_char()
             self.parancont()
-        else: self.panic(self.current_char[0], ';', '1')
+        else: self.panic(self.current_char)
 
     #SE#
     # def se(self):
@@ -756,9 +757,9 @@ class Parser:
                 if self.current_char[2] == '}':
                     self.next_char()
                     self.senao()
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '{')
+        else: self.panic(self.current_char, ')')
 
     #SENAO#
     def senao(self):
@@ -769,8 +770,8 @@ class Parser:
                 self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, '}')
+            else: self.panic(self.current_char, '{')
         else: return None
 
     ##VARIAVEIS##
@@ -778,7 +779,7 @@ class Parser:
         if self.current_char[2] == '{':
             self.next_char()
             self.var()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, '}')
 
     ##VAR##
     def var(self):
@@ -824,7 +825,7 @@ class Parser:
         if self.current_char[2] == '{':
             self.next_char()
             self.const()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, '{')
 
     ##CONST##
     def const(self):
@@ -849,12 +850,12 @@ class Parser:
             return None
         elif self.current_char[2] == 'registro':
             return None
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
 
     #IDE#
     def ide(self):
         if self.current_char[1] != 'IDE':
-            self.panic(self.current_char[0], ';')
+            self.panic(self.current_char, 'Token Type: IDE')
 
     #VARINIT#
     def varinit(self):
@@ -864,7 +865,7 @@ class Parser:
             if self.current_char[2] != ',':
                 if self.current_char[2] == ';':
                     return None
-                else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ';')
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -875,10 +876,10 @@ class Parser:
                     if self.current_char[2] != ',':
                         if self.current_char[2] == ';':
                             return None
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char)
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
+        else: self.panic(self.current_char)
     
     ##VARINITCONT##
     def varinitcont(self):
@@ -898,10 +899,10 @@ class Parser:
                     if self.current_char[2] != ',':
                         if self.current_char[2] == ';':
                             return None
-                        else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+                        else: self.panic(self.current_char, ';')
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
+        else: self.panic(self.current_char, '{')
 
     ##VARINITCONTMATR##
     def varinitcontmatr(self):
@@ -915,9 +916,9 @@ class Parser:
                     if self.current_char[2] == '{':
                         self.next_char()
                         self.vetor()
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
+                    else: self.panic(self.current_char, '{')
+                else: self.panic(self.current_char, ',')
+            else: self.panic(self.current_char, '{')
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -941,16 +942,16 @@ class Parser:
                                             self.vetor()
                                             if self.current_char[2] == ';':
                                                 return None
-                                            else: self.panic(self.current_char[0], ';')
-                                        else: self.panic(self.current_char[0], ';')
-                                    else: self.panic(self.current_char[0], ';')
-                                else: self.panic(self.current_char[0], ';')
-                            else: self.panic(self.current_char[0], ';')
-                        else: self.panic(self.current_char[0], ';')
-                    else: self.panic(self.current_char[0], ';')
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
-        else: self.panic(self.current_char[0], ';')
+                                            else: self.panic(self.current_char, ';')
+                                        else: self.panic(self.current_char, '{')
+                                    else: self.panic(self.current_char, ',')
+                                else: self.panic(self.current_char, '{')
+                            else: self.panic(self.current_char, ',')
+                        else: self.panic(self.current_char, '{')
+                    else: self.panic(self.current_char, '=')
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
+        else: self.panic(self.current_char, '{')
 
     ##VETOR##
     def vetor(self):
@@ -1041,7 +1042,7 @@ class Parser:
         if self.current_char[2] == '(':
             self.next_char()
             self.leiacont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, '(')
     
     def leiacont(self):
         self.acessovar()
@@ -1055,15 +1056,15 @@ class Parser:
         elif self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
-                self.panic(self.current_char[0], ';')
+                self.panic(self.current_char, ';')
             else: self.next_char()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
 
     def escreva(self):
         if self.current_char[2] == '(':
             self.next_char()
             self.escont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, '(')
 
     def escont(self):#nessa produção ele gera outras três produções de não terminal, então é analisado o tipo to token para saber qual caminho prosseguir
         if self.current_char[1] == 'IDE':
@@ -1078,7 +1079,7 @@ class Parser:
             self.next_char()
             #self.char()
             self.esfim()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
     
     def esfim(self):
         if self.current_char[2] == ',':
@@ -1087,18 +1088,18 @@ class Parser:
         elif self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
-                self.panic(self.current_char[0], ';')
+                self.panic(self.current_char, ';')
             else: self.next_char()#se o último character for realmente o ';' então o escreva acabou e eu passo para o próximo character a ser analisado
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char)
 
     def retorno(self):
         self.valor()
         if self.current_char[2] != ";":
-            self.panic(self.current_char[0], ';')
+            self.panic(self.current_char, ';')
 
     def bool(self):
         if self.current_char[2] != 'verdadeiro' and self.current_char[2] != 'falso':
-            self.panic(self.current_char[0], ';')
+            self.panic(self.current_char, 'Token Type: BOOL')
     
     
     #ACESSOVAR#
@@ -1106,7 +1107,7 @@ class Parser:
         if self.current_char[1] == 'IDE':
             self.next_char()
             self.acessovarcont()
-        else: self.panic(self.current_char[0], ';')
+        else: self.panic(self.current_char, 'Token Type: IDE')
     
     #ACESSOVARCONT#
     def acessovarcont(self):
@@ -1120,8 +1121,8 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.acessovarcontb()
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         else: return None
 
     #ACESSOVARCONTB#
@@ -1133,8 +1134,8 @@ class Parser:
                 if self.current_char[2] == ']':
                     self.next_char()
                     self.acessovarcontc()
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         else: return None
     
     #ACESSOVARCONTC#
@@ -1145,19 +1146,32 @@ class Parser:
                 self.next_char()
                 if self.current_char[2] == ']':
                     self.next_char()
-                else: self.panic(self.current_char[0], ';')
-            else: self.panic(self.current_char[0], ';')
+                else: self.panic(self.current_char, ']')
+            else: self.panic(self.current_char, 'Token Type: NRO')
         else: return None
 
     def erro(self, error):
         self.pars_res.append(error)
         #print("I wasn't supposed to be here!")
     
-    def panic(self, error_line, stop_char, debug = 'normal'):
+    # def panic(self, error_line, stop_char, debug = 'normal'):
+    #     self.counter += 1
+    #     error_message = 'Syntax Error on line: ' + str(error_line) + '; debug: ' + debug
+    #     self.pars_res.append(error_message)
+    #     while self.current_char[2] != stop_char:
+    #         if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
+    #             break
+    
+    def panic(self, error_char, expected_char = ''):
         self.counter += 1
-        error_message = 'Syntax Error on line: ' + str(error_line) + '; debug: ' + debug
-        self.pars_res.append(error_message)
-        while self.current_char[2] != stop_char:
+        stop_char = [';', '}']
+        if expected_char != '':
+            error_message = 'Syntax Error: (' + 'Expected: (' + expected_char + ') Found: (' + str(error_char[2]) + '), line: ' + str(error_char[0]) + ')'
+            self.pars_res.append(error_message)
+        elif expected_char == '':
+            error_message = 'Syntax Error: ' + 'invalid syntax(' + str(error_char[2]) + ', line: ' + str(error_char[0]) + ')'
+            self.pars_res.append(error_message)
+        while self.current_char[2] not in stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
                 break
 
