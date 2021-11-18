@@ -65,6 +65,8 @@ class Parser:
     
     def doParsing(self):
         self.pars_res = []
+        if 'comentario de linha' in self.lex_array: self.lex_array.remove('comentario de linha')
+        if 'comentario de bloco' in self.lex_array: self.lex_array.remove('comentario de bloco')
         if len(self.lex_array) > 0:# roda se houver algum resultado do analisador léxico
             self.current_char = self.get_current_char(0)# ele precisa iniciar o current_char, mas depois o next char já atualiza automaticamente o current_char
             #isso aqui é para colocar o '$' como símbolo final da cadeia de lexemas
@@ -299,6 +301,7 @@ class Parser:
             self.next_char()
             return True
         elif self.current_char[2] == '}':#quer dizer que o conteudo foi 'conteudo{}' NAO, NAO QUER DIZER NAO, pra ver se foi conteudo{}, eu posso checar se o char anterior é {. Do contrário é uma produção vazia 
+
             return False
         elif self.current_char[2] == ';':
             if not self.next_char():#é pra ver se tem next char?
@@ -1166,7 +1169,7 @@ class Parser:
         self.counter += 1
         stop_char = [';', '}']
         if expected_char != '':
-            error_message = 'Syntax Error: (' + 'Expected: (' + expected_char + ') Found: (' + str(error_char[2]) + '), line: ' + str(error_char[0]) + ')'
+            error_message = 'Syntax Error: (' + 'Expected: \'' + expected_char + '\' Found: \'' + str(error_char[2]) + '\', line: ' + str(error_char[0]) + ')'
             self.pars_res.append(error_message)
         elif expected_char == '':
             error_message = 'Syntax Error: ' + 'invalid syntax(' + str(error_char[2]) + ', line: ' + str(error_char[0]) + ')'

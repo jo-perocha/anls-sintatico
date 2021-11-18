@@ -1,11 +1,11 @@
-Variaveis{
+variaveis{
     inteiro a_2;
-	inteiro b1_;
+	inteiro a_2;
 	real c;
 	}
 
 % funcao de somar
-funcao vazio soma (inteiro e, inteiro f){
+funcao vazio soma (inteiro e, real g){
 	c = e + f;
 	escreva(c);
 	}
@@ -17,12 +17,12 @@ aa, a2, a_, a_a, a_2
 algoritmo{
 	a = verdadeiro;
 	b = 2
-	soma(a,b)
+	soma(a,)
 	soma(a_2, b1_);
-	if(c > 2.2){
+	se(c >){
 		escreva("Esse numero e maior");
 	}
-	else {
+	se nao{
 		escreva("Esse numero e menor");
 	}
 }

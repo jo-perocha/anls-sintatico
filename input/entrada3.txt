@@ -1,10 +1,65 @@
-inteiro a = leia("Coloque um inteiro:");
-se(a<=9){
-    escreva("Isso eh uma unidade");
-} senao se(a<100){
-    escreva("Isso eh uma dezena");
-} senao se(a<=999){
-    escreva("Isso eh uma centena");
-} senao{
-    escreva("Isso eh acima de centena");
+constantes{
+    inteiro a[2][2][2] = {2,2},{2},{3,2,1};
+    real madrid = "falso";
+    booleano a = a(a,a>4,a&&e,true,2+2);
+}
+variaveis{
+    inteiro a,b,c;
+    real sociedad = - 1.1;
+    real valladolid = 11.1;
+    cadeia a = False;
+}
+
+funcao vazio soma (inteiro e){
+	c = e + f;
+	escreva(c);
+}
+
+funcao inteiro soma (inteiro e){
+	c = e + f;
+	escreva(c);
+    se(a>b){
+        retorno a;
+    }
+    retorno c;
+    leia(c);
+}
+
+algoritmo{
+    escreva(a);
+    leia(a.a[2]);
+    constantes{
+        inteiro a[2][2][2] = {2,2},{2},{3,2,1};
+        real madrid = "falso";
+        booleano a = a(a,a>4,a&&e,true,2+2);
+    }
+    variaveis{
+        inteiro a,b,c;
+        real sociedad = - 1.1;
+        real valladolid = 11.1;
+        cadeia a = False;
+    }
+    
+    % OPA eae véi blz?
+    {# jajajaja #}
+    a = 's';
+    a(a,v,g);
+    se(a==a){
+        escreva(a);
+    }
+    se(b==b){
+        escreva(b);
+    } senao {
+        escreva(a);
+    }
+    enquanto(2>(2>(2>2))){
+        escreva(c);
+    }
+    para(i=2+2; a==b; i++){
+        escreva(d);
+    }
+    registro a {
+        inteiro a;
+        real mallorca = 1.1;
+    }
 }
