@@ -4,11 +4,19 @@ from typing import Counter
 import anl_lex
 from anl_lex import Token
 
+############################
+## Dictionary Declaration ##
+############################
+#the symbol table is going to be an array of dictionaries, each dictionary is going to hold the information of one declared identifier
+symTable = []
+
+
 def run(result_lex):
     parser = Parser(result_lex)
     pars_res = parser.doParsing()
     if len(pars_res) == 0:
         pars_res.append("SUCESSO!")
+        print(symTable)
     return pars_res
 
 class Parser:
@@ -24,6 +32,7 @@ class Parser:
         self.logica_list =['&&', '||']
         self.bool_list =['verdadeiro', 'falso']
         self.counter = 0 #auxiliar para debugar onde aconteceu o primeiro erro
+        self.scope = 'global' #vai dizer ser a variável que vai determinar se eu estou denro de um escopo de função 'func' ou no escopo global 'global'. Se eu entrar em uma produção de função eu mudo para 'func' e quando acabar volta para 'global'
 
     #a funcao cria uma matriz em que cada linha vai conter o número de linha do token, o tipo do token e o lexema em si
     def make_matrix(self):
@@ -161,6 +170,8 @@ class Parser:
     #REGISTRO#
     def registro(self):
         if self.current_char[1] == 'IDE':
+            sym = dict(name = str(self.current_char[2]), type = str(self.current_char[1]), scope = 'global', line = str(self.current_char[0]), rule = 'registro')
+            symTable.append(sym)
             self.next_char()
             if self.current_char[2] == '{':
                 self.next_char()
@@ -786,35 +797,55 @@ class Parser:
 
     ##VAR##
     def var(self):
+        #
+        auxLen = len(self.pars_res)
+        type = self.current_char[2]
+        sym = dict(type = self.current_char[2])#eu guardo o nome e o tipo do identificador para depois, se não houver nenhum erro sintático na declaração adicionar aquele identificador a tabela de símbolos(linha 805)
+        ##
         self.tipo()
         self.next_char()
+        #
+        sym["name"] = self.current_char[2]; sym['scope'] = self.scope; sym['line'] = self.current_char[0]; sym['rule'] = 'VAR'
+        ##
         self.ide()
+        #
+        if len(self.pars_res) == auxLen:# se no final de ter lido a variável e não teve erro nenhum eu coloco o identificador na tabela de símbolos
+            symTable.append(sym)
+        ##
         self.next_char()
-        self.varcont()
+        self.varcont(type)
 
     ##VARCONT##
-    def varcont(self):
+    def varcont(self, type = 'default'):
         if self.current_char[2] == ',' or self.current_char[2] == ';':#isso permite a produção de só um ','
-            self.varfinal()
+            self.varfinal(type)
         else:
             self.varinit()
             #self.next_char()
-            self.varfinal()
+            self.varfinal(type)
 
     ##VARFINAL##
-    def varfinal(self):
+    def varfinal(self, type = 'default'):
         if self.current_char[2] == ',':
             self.next_char()
-            self.varalt()
+            self.varalt(type)
         elif self.current_char[2] == ';':
             self.next_char()
             self.varfim()
 
     ##VARALT##
-    def varalt(self):#eu tenho que voltar a chamar var para o caso do registro?
+    def varalt(self, type = 'default'):#eu tenho que voltar a chamar var para o caso do registro?
+        #
+        auxLen = len(self.pars_res)
+        ##
         self.ide()
+        #
+        if len(self.pars_res) == auxLen:#uma ideia, se não for colocar símbolo errado na tabela de símbolos e checar o valor de pars-res antes e comparar depois para ver se é o mesmo, o que significa que não houv erro.
+            sym = dict(name = self.current_char[2], type = type, scope = self.scope, line = str(self.current_char[0]), rule = 'VAR')
+            symTable.append(sym)
+        ##
         self.next_char()
-        self.varcont()
+        self.varcont(type)
 
     ##VARFIM##
     def varfim(self):

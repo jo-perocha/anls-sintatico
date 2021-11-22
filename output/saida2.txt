@@ -1,1 +1,0 @@
-Syntax Error: invalid syntax(, line: 7)
