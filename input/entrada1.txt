@@ -14,4 +14,7 @@ algoritmo {
         cadeia pontos[2] = {"ola","mundo"};
 	    booleano ans = verdadeiro;
     }
+    j = verdadeiro;
+    l = 2;
+    k = ans;
 }

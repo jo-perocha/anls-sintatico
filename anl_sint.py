@@ -13,11 +13,11 @@ symTable = []
 
 def run(result_lex):
     parser = Parser(result_lex)
-    pars_res = parser.doParsing()
-    if len(pars_res) == 0:
+    pars_res, sm_res = parser.doParsing()
+    if len(pars_res) == 0 and len(sm_res) == 0:
         pars_res.append("SUCESSO!")
-        print(symTable)
-    return pars_res
+    
+    return pars_res, sm_res
 
 class Parser:
     def __init__(self, result_lex):
@@ -26,6 +26,7 @@ class Parser:
         self.lexeme_matrix = []#vai ser a matriz que guarda o valor da linha o tipo  token e o lexema de cada saída do léxico
         self.current_char = None#é uma linha inteira da matriz lexeme_matrix
         self.pars_res = []
+        self.sm_res = []
         self.relacional_list =['<', '>', '<=', '>=', '!=', '==']
         self.aritmetica_list =['+', '-', '*', '/']
         self.aritmetica_add_list =['++', '--']
@@ -84,7 +85,7 @@ class Parser:
             self.lexeme_matrix.append([aux[0], 'END', '$'])
             ##
             self.start()# inicia a cadeia de leitura da gramática
-        return self.pars_res#onde vão ser colocados os erros sintáticos ou a mensagem de sucesso no final do programa
+        return self.pars_res, self.sm_res#onde vão ser colocados os erros sintáticos ou a mensagem de sucesso no final do programa
 
     #####################################
     ## Derivação da "árvore" sintática ##
@@ -94,7 +95,6 @@ class Parser:
     def start(self):
         if self.current_char[2] == "algoritmo":
             self.next_char()
-            print(self.pars_res)
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
             self.next_char()
@@ -319,10 +319,14 @@ class Parser:
                 return None
             else: self.prev_char()
         elif self.current_char[1] == 'IDE':
+            #
+            auxName = self.current_char[2]
+            ##
             self.acessovar()
             if self.current_char[2] == '=':
                 self.next_char()
-                self.expatribuicao()
+                self.expatribuicao(auxName)#termina checando se o último character é o ';' então eu tenho que dar um next_char para chamar conteúdo 
+                self.next_char()
                 self.conteudo()
             else: self.panic(self.current_char, '=')
         elif self.current_char[2] == 'enquanto':
@@ -664,36 +668,120 @@ class Parser:
             self.next_char()
             self.exparitmeticab()
         else: return None
+
     
     #EXPATRIBUICAO#
-    def expatribuicao(self):
+    def expatribuicao(self, leftVarName = 'default'):#ela só recebe após o '=' então eu tenho que passar o nome da variável para checar na tabela
+        #
+        # leftVarType = self.get_type(leftVarName)
+        # if self.current_char[1] == 'IDE':
+        #     rightVarType = self.get_type(str(self.current_char[2]))
+        #     if leftVarType != rightVarType:
+        #         self.smt_err(self.current_char[2], 'Atribuição de valores diferentes')
+        # print(leftVarName)
+        # if self.current_char[1] == 'IDE':
+        #     for i in range(len(symTable)):
+        #         sym = symTable[i]
+        #         if leftVarName == sym['name']:
+        #             varType = sym['type']
+        #             print(varType)
+        # if self.current_char[1] == 'IDE':
+        #     leftVarType = self.get_type(leftVarName)
+        #     rightVarType = self.get_type(self.current_char[2])
+        #     print(leftVarType)
+        #     print(rightVarType)
+        #
+
+        #
+        leftVarType = self.get_type(leftVarName)
+        rightVarType = self.get_type(self.current_char[2])
+        ##
         if self.current_char[1] == 'IDE':
+            #
+            auxChar = self.current_char
+            ##
             self.acessovar()
-            if self.current_char[2] in self.aritmetica_add_list:
-                return None
-            elif self.current_char[2] in self.aritmetica_list:
+            if self.current_char[2] in self.aritmetica_add_list:#se o tipo da direita for um IDE ++/-- a esquerda só pode ser real ou inteiro
                 self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
+                else:
+                    #
+                    if leftVarType != None:
+                        if rightVarType != None:
+                            if rightVarType == 'inteiro' or rightVarType == 'real':
+                                if leftVarType == rightVarType:
+                                    None
+                                else: self.smt_err(auxChar, 'Assigned variable must be of the same type')
+                            else: self.smt_err(auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                        else: self.smt_err(auxChar, 'Varibale not declared')
+                    ##
+            elif self.current_char[2] in self.aritmetica_list:#se a direita for uma expressão aritmética a esquerda só pode ser real ou inteiro
+                self.next_char()
+                #
+                auxLen = len(self.pars_res)
+                ##
                 self.exparitmeticab()
-            elif self.current_char[2] == '(':
+                self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
+                #
+                else:
+                    if len(self.pars_res) == auxLen:
+                        if leftVarType != None:
+                            if rightVarType != None:
+                                if rightVarType == 'inteiro' or rightVarType == 'real':
+                                    if leftVarType == rightVarType:
+                                        None
+                                    else: self.smt_err(auxChar, 'Assigned variable must be of the same type')
+                                else: self.smt_err(auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                            else: self.smt_err(auxChar, 'Variable not declared')
+                ##
+            elif self.current_char[2] == '(':#qual tipo que pode ser se for um a()?
                 self.next_char()
                 self.paran()
-            else: return None
+                self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
+            elif self.current_char[2] == ';':#se o lado direito for apenas um IDE, então o lado esquerdo pode ser de qualquer tipo, eles só tem que ser iguais
+                if leftVarType != None:
+                    if rightVarType != None:
+                        if rightVarType != leftVarType:
+                            self.smt_err(auxChar, 'Assigned variable must be of the same type')
+                    else: self.smt_err(auxChar, 'Variable not declared')
+                return None
+            else: self.panic(self.current_char, ';')
         elif self.current_char[1] == 'NRO':
             self.next_char()
             if self.current_char[2] in self.aritmetica_add_list:
-                return None
+                self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
-                self.exparitmeticab()
+                self.exparitmeticab()#depois de acabar expb ele termina no próximo character?
+                self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
         elif self.current_char[2] == '-':
             self.next_char()
             if self.current_char[1] == 'NRO':
                 self.next_char()
                 self.exparitmeticacont()
+                self.next_char()
+                if self.current_char[2] != ';':
+                    self.panic(self.current_char, ';')
         elif self.current_char[2] == '(':
             self.next_char()
             self.exparitmeticaparen()
-    
+            self.next_char()
+            if self.current_char[2] != ';':
+                self.panic(self.current_char, ';')
+        elif self.current_char[2] in self.bool_list:
+            self.next_char()
+            if self.current_char[2] != ';':
+                self.panic(self.current_char, ';')
+
     #VALOR#
     def valor(self):
         if self.current_char[1] == 'IDE':
@@ -1195,6 +1283,13 @@ class Parser:
     #     while self.current_char[2] != stop_char:
     #         if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
     #             break
+
+    def get_type(self, varName):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if varName == sym['name']:
+                return sym['type']
+        return None
     
     def panic(self, error_char, expected_char = ''):
         self.counter += 1
@@ -1208,6 +1303,10 @@ class Parser:
         while self.current_char[2] not in stop_char:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
                 break
+    
+    def smt_err(self, errorChar, errMessage = ' INVALID TYPE/DECLARATION '):
+        errorMessage = 'Semantic Error: ' + errMessage + '\'' + errorChar + '\''
+        self.sm_res.append(errorMessage)
 
 
     #SE#
