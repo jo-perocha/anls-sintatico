@@ -1,2 +1,5 @@
-SUCESSO!
 
+
+Semantic Error: line: 17, Assigned variable (verdadeiro) must be of type: inteiro
+Semantic Error: line: 18, Variable not declared 'l'
+Semantic Error: line: 19, Assigned variable (ans) must be of type: inteiro

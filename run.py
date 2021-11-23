@@ -31,11 +31,14 @@ def read_write_file(file_value):
     for i in range(result_size):
         with open('output\saida' + str(file_value) + '.txt', 'a') as file:
                 file.write(result_sint[i])
+
     with open('output\saida' + str(file_value) + '.txt', 'a') as file:
             file.write('\n' + '\n')
+
     for i in range(result_sm_size):
         with open('output\saida' + str(file_value) + '.txt', 'a') as file:
                 file.write(result_sm[i])
+                file.write('\n')
     
     print(result_sint)
 

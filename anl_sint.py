@@ -321,6 +321,8 @@ class Parser:
         elif self.current_char[1] == 'IDE':
             #
             auxName = self.current_char[2]
+            varType = self.get_type(self.current_char[2])
+            if varType == None: self.smt_err(self.current_char[0],self.current_char[2], ' Variable not declared')
             ##
             self.acessovar()
             if self.current_char[2] == '=':
@@ -673,32 +675,13 @@ class Parser:
     #EXPATRIBUICAO#
     def expatribuicao(self, leftVarName = 'default'):#ela só recebe após o '=' então eu tenho que passar o nome da variável para checar na tabela
         #
-        # leftVarType = self.get_type(leftVarName)
-        # if self.current_char[1] == 'IDE':
-        #     rightVarType = self.get_type(str(self.current_char[2]))
-        #     if leftVarType != rightVarType:
-        #         self.smt_err(self.current_char[2], 'Atribuição de valores diferentes')
-        # print(leftVarName)
-        # if self.current_char[1] == 'IDE':
-        #     for i in range(len(symTable)):
-        #         sym = symTable[i]
-        #         if leftVarName == sym['name']:
-        #             varType = sym['type']
-        #             print(varType)
-        # if self.current_char[1] == 'IDE':
-        #     leftVarType = self.get_type(leftVarName)
-        #     rightVarType = self.get_type(self.current_char[2])
-        #     print(leftVarType)
-        #     print(rightVarType)
-        #
-
-        #
         leftVarType = self.get_type(leftVarName)
         rightVarType = self.get_type(self.current_char[2])
         ##
         if self.current_char[1] == 'IDE':
             #
-            auxChar = self.current_char
+            auxChar = self.current_char[2]
+            auxLine = self.current_char[0]
             ##
             self.acessovar()
             if self.current_char[2] in self.aritmetica_add_list:#se o tipo da direita for um IDE ++/-- a esquerda só pode ser real ou inteiro
@@ -712,9 +695,9 @@ class Parser:
                             if rightVarType == 'inteiro' or rightVarType == 'real':
                                 if leftVarType == rightVarType:
                                     None
-                                else: self.smt_err(auxChar, 'Assigned variable must be of the same type')
-                            else: self.smt_err(auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
-                        else: self.smt_err(auxChar, 'Varibale not declared')
+                                else: self.smt_err(auxLine, auxChar, '', leftVarType)
+                            else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
                     ##
             elif self.current_char[2] in self.aritmetica_list:#se a direita for uma expressão aritmética a esquerda só pode ser real ou inteiro
                 self.next_char()
@@ -733,9 +716,9 @@ class Parser:
                                 if rightVarType == 'inteiro' or rightVarType == 'real':
                                     if leftVarType == rightVarType:
                                         None
-                                    else: self.smt_err(auxChar, 'Assigned variable must be of the same type')
-                                else: self.smt_err(auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
-                            else: self.smt_err(auxChar, 'Variable not declared')
+                                    else: self.smt_err(auxLine, auxChar, '', leftVarType)
+                            else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
                 ##
             elif self.current_char[2] == '(':#qual tipo que pode ser se for um a()?
                 self.next_char()
@@ -744,33 +727,109 @@ class Parser:
                 if self.current_char[2] != ';':
                     self.panic(self.current_char, ';')
             elif self.current_char[2] == ';':#se o lado direito for apenas um IDE, então o lado esquerdo pode ser de qualquer tipo, eles só tem que ser iguais
+                #
                 if leftVarType != None:
                     if rightVarType != None:
                         if rightVarType != leftVarType:
-                            self.smt_err(auxChar, 'Assigned variable must be of the same type')
-                    else: self.smt_err(auxChar, 'Variable not declared')
+                            self.smt_err(auxLine, auxChar, '', leftVarType)
+                    else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                ##
                 return None
             else: self.panic(self.current_char, ';')
         elif self.current_char[1] == 'NRO':
+            #
+            auxChar = self.current_char[2]
+            auxLine = self.current_char[0]
+            ##
             self.next_char()
             if self.current_char[2] in self.aritmetica_add_list:
                 self.next_char()
                 if self.current_char[2] != ';':
                     self.panic(self.current_char, ';')
+                #
+                else: 
+                    if leftVarType != None:
+                        if rightVarType != None:
+                            if rightVarType != leftVarType:#como ele já é NRO, eu só preciso checar se o tipo do lado esquerdo é igual ao do direito
+                                self.smt_err(auxLine, auxChar, '', leftVarType)
+                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                ##
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
+                #
+                auxLen = len(self.pars_res)
+                ##
                 self.exparitmeticab()#depois de acabar expb ele termina no próximo character?
                 self.next_char()
                 if self.current_char[2] != ';':
                     self.panic(self.current_char, ';')
+                #
+                else: 
+                    if auxLen == len(self.pars_res):
+                        if leftVarType != None:
+                            if rightVarType != None:
+                                if rightVarType != leftVarType:
+                                    self.smt_err(auxLine, auxChar, '', leftVarType)
+                            else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                ##
+            elif self.current_char[2] == ';':#I think I had forgotten to add this one. If it assigns only a number
+                if leftVarType != None:
+                    if rightVarType != None:
+                        if rightVarType != leftVarType:
+                            self.smt_err(auxLine, auxChar, '', leftVarType)
+                    else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+
         elif self.current_char[2] == '-':
             self.next_char()
             if self.current_char[1] == 'NRO':
+                # self.next_char()
+                # self.exparitmeticacont()
+                # self.next_char()
+                # if self.current_char[2] != ';':
+                #     self.panic(self.current_char, ';')
+                #
+                auxChar = self.current_char[2]
+                auxLine = self.current_char[0]
+                ##
                 self.next_char()
-                self.exparitmeticacont()
-                self.next_char()
-                if self.current_char[2] != ';':
-                    self.panic(self.current_char, ';')
+                if self.current_char[2] in self.aritmetica_add_list:
+                    self.next_char()
+                    if self.current_char[2] != ';':
+                        self.panic(self.current_char, ';')
+                    #
+                    else: 
+                        if leftVarType != None:
+                            if rightVarType != None:
+                                if rightVarType != leftVarType:#como ele já é NRO, eu só preciso checar se o tipo do lado esquerdo é igual ao do direito
+                                    self.smt_err(auxLine, auxChar, '', leftVarType)
+                            else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                    ##
+                elif self.current_char[2] in self.aritmetica_list:
+                    self.next_char()
+                    #
+                    auxLen = len(self.pars_res)
+                    ##
+                    self.exparitmeticab()#depois de acabar expb ele termina no próximo character?
+                    self.next_char()
+                    if self.current_char[2] != ';':
+                        self.panic(self.current_char, ';')
+                    #
+                    else: 
+                        if auxLen == len(self.pars_res):
+                            if rightVarType != None:
+                                if rightVarType != None:
+                                    if rightVarType != leftVarType:
+                                        self.smt_err(auxLine, auxChar, '', leftVarType)
+                                else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                    ##
+                elif self.current_char[2] == ';':#I think I had forgotten to add this one. If it assigns only a number
+                    #
+                    if leftVarType != None:
+                        if rightVarType != None:
+                            if rightVarType != leftVarType:
+                                self.smt_err(auxLine, auxChar, '', leftVarType)
+                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                    ##
         elif self.current_char[2] == '(':
             self.next_char()
             self.exparitmeticaparen()
@@ -778,9 +837,18 @@ class Parser:
             if self.current_char[2] != ';':
                 self.panic(self.current_char, ';')
         elif self.current_char[2] in self.bool_list:
+            #
+            auxChar = self.current_char[2]
+            auxLine = self.current_char[0]
+            ##
             self.next_char()
             if self.current_char[2] != ';':
                 self.panic(self.current_char, ';')
+            #
+            else: 
+                if rightVarType != leftVarType:
+                    self.smt_err(auxLine, auxChar, '', leftVarType)
+            ##
 
     #VALOR#
     def valor(self):
@@ -1304,8 +1372,11 @@ class Parser:
             if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
                 break
     
-    def smt_err(self, errorChar, errMessage = ' INVALID TYPE/DECLARATION '):
-        errorMessage = 'Semantic Error: ' + errMessage + '\'' + errorChar + '\''
+    def smt_err(self, errorLine, errorChar, errMessage = ' INVALID TYPE/DECLARATION ', type = 'default'):
+        if type != 'default':
+            errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ', Assigned variable ' + '(' + errorChar + ')' + ' must be of type: ' + type 
+        else:
+            errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ',' + errMessage + ' \'' + errorChar + '\''
         self.sm_res.append(errorMessage)
 
 
