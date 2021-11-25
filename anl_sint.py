@@ -60,10 +60,7 @@ class Parser:
     #o next_char vai passar para o próximo token na cadeia. Mas ele também serve para verificar se chegou no final. Se chegou no final da cadeia ele retorna True, se não ele retorna None#
     def next_char(self):
         self.pos += 1
-        #print("pos: " + str(self.pos))
         if self.pos < (len(self.lexeme_matrix)):
-            #print(len(self.lexeme_matrix))
-            #print(self.pos)
             self.current_char = self.lexeme_matrix[self.pos]
             return None
         else: return True
@@ -257,6 +254,7 @@ class Parser:
         if self.current_char[2] == '(':
             self.next_char()
             self.paran()
+            print(self.current_char[2])
 
     ##ALGORITMO##
     def algoritmo(self):
@@ -275,8 +273,6 @@ class Parser:
 
     ##CONTEUDO##
     def conteudo(self):
-        #print(self.current_char[2])
-        #print(self.pars_res)
         if self.current_char[2] == 'variaveis':
             self.next_char()
             self.variaveis()
@@ -322,15 +318,22 @@ class Parser:
             #
             auxName = self.current_char[2]
             varType = self.get_type(self.current_char[2])
-            if varType == None: self.smt_err(self.current_char[0],self.current_char[2], ' Variable not declared')
             ##
+            #Here two things can happen. I can make an atribution for a variable, or I can call a function
             self.acessovar()
             if self.current_char[2] == '=':
+                #
+                if varType == None: self.smt_err(self.current_char[0],auxName , ' Variable not declared')
+                ##
                 self.next_char()
                 self.expatribuicao(auxName)#termina checando se o último character é o ';' então eu tenho que dar um next_char para chamar conteúdo 
                 self.next_char()
                 self.conteudo()
-            else: self.panic(self.current_char, '=')
+            elif self.current_char[2] == '(':
+                if varType == None: self.smt_err(self.current_char[0],auxName , ' Function not declared')
+                self.next_char()
+                self.paran()
+                self.conteudo()
         elif self.current_char[2] == 'enquanto':
             self.next_char()
             if self.current_char[2] == '(':
@@ -749,10 +752,8 @@ class Parser:
                 #
                 else: 
                     if leftVarType != None:
-                        if rightVarType != None:
-                            if rightVarType != leftVarType:#como ele já é NRO, eu só preciso checar se o tipo do lado esquerdo é igual ao do direito
+                        if leftVarType != 'inteiro':
                                 self.smt_err(auxLine, auxChar, '', leftVarType)
-                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
                 ##
             elif self.current_char[2] in self.aritmetica_list:
                 self.next_char()
@@ -774,10 +775,8 @@ class Parser:
                 ##
             elif self.current_char[2] == ';':#I think I had forgotten to add this one. If it assigns only a number
                 if leftVarType != None:
-                    if rightVarType != None:
-                        if rightVarType != leftVarType:
-                            self.smt_err(auxLine, auxChar, '', leftVarType)
-                    else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                    if leftVarType != 'inteiro':
+                        self.smt_err(auxLine, auxChar, '', leftVarType)
 
         elif self.current_char[2] == '-':
             self.next_char()
@@ -877,6 +876,9 @@ class Parser:
     def paranfim(self):
         if self.current_char[2] == ')':
             self.next_char()
+            if self.current_char[2] != ';':
+                self.panic(self.current_char, ';')
+            else: self.next_char()
         elif self.current_char[2] == ',':
             self.next_char()
             self.parancont()
@@ -884,7 +886,6 @@ class Parser:
 
     #SE#
     # def se(self):
-    #     print('hi')
     #     if self.current_char[2] in self.bool_list:
     #         self.next_char()
     #         if self.current_char[2] == ')':
@@ -965,8 +966,11 @@ class Parser:
         ##
         self.ide()
         #
-        if len(self.pars_res) == auxLen:# se no final de ter lido a variável e não teve erro nenhum eu coloco o identificador na tabela de símbolos
-            symTable.append(sym)
+        if len(self.pars_res) == auxLen:# se no final de ter lido a variável e não teve erro nenhum eu coloco o identificador na tabela de símbolos           
+            if not self.is_declared(sym['name']):#I also need to check whether the variable has been declared or not
+                symTable.append(sym)
+            else: 
+                self.smt_err(self.current_char[0], self.current_char[2], ' Two variables cannot be declared with the same name ')
         ##
         self.next_char()
         self.varcont(type)
@@ -998,7 +1002,10 @@ class Parser:
         #
         if len(self.pars_res) == auxLen:#uma ideia, se não for colocar símbolo errado na tabela de símbolos e checar o valor de pars-res antes e comparar depois para ver se é o mesmo, o que significa que não houv erro.
             sym = dict(name = self.current_char[2], type = type, scope = self.scope, line = str(self.current_char[0]), rule = 'VAR')
-            symTable.append(sym)
+            if not self.is_declared(sym['name']):
+                symTable.append(sym)
+            else:
+                self.smt_err(self.current_char[0], self.current_char[2], ' Two variables cannot be declared with the same name ')
         ##
         self.next_char()
         self.varcont(type)
@@ -1342,7 +1349,6 @@ class Parser:
 
     def erro(self, error):
         self.pars_res.append(error)
-        #print("I wasn't supposed to be here!")
     
     # def panic(self, error_line, stop_char, debug = 'normal'):
     #     self.counter += 1
@@ -1351,16 +1357,26 @@ class Parser:
     #     while self.current_char[2] != stop_char:
     #         if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
     #             break
-
+    
+    #it returns the type of a given variable, if the variable has been declared
+    #it takes as paramater the name of the variable
     def get_type(self, varName):
         for i in range(len(symTable)):
             sym = symTable[i]
             if varName == sym['name']:
                 return sym['type']
         return None
+    #paramater: name of the variable
+    #returns true if the given variable has been declared(is in the symbol table)
+    def is_declared(self, varName):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if varName == sym['name']:
+                return True
+        return False
     
     def panic(self, error_char, expected_char = ''):
-        self.counter += 1
+        #self.counter += 1
         stop_char = [';', '}']
         if expected_char != '':
             error_message = 'Syntax Error: (' + 'Expected: \'' + expected_char + '\' Found: \'' + str(error_char[2]) + '\', line: ' + str(error_char[0]) + ')'
@@ -1374,7 +1390,7 @@ class Parser:
     
     def smt_err(self, errorLine, errorChar, errMessage = ' INVALID TYPE/DECLARATION ', type = 'default'):
         if type != 'default':
-            errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ', Assigned variable ' + '(' + errorChar + ')' + ' must be of type: ' + type 
+            errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ', Assigned value ' + '(' + errorChar + ')' + ' must be of type: ' + type 
         else:
             errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ',' + errMessage + ' \'' + errorChar + '\''
         self.sm_res.append(errorMessage)

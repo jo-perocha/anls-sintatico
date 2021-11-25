@@ -1,5 +1,10 @@
 
 
-Semantic Error: line: 17, Assigned variable (verdadeiro) must be of type: inteiro
-Semantic Error: line: 18, Variable not declared 'l'
-Semantic Error: line: 19, Assigned variable (ans) must be of type: inteiro
+Semantic Error: line: 7, Two variables cannot be declared with the same name  'j'
+Semantic Error: line: 8, Two variables cannot be declared with the same name  'k'
+Semantic Error: line: 11, Two variables cannot be declared with the same name  'nome'
+Semantic Error: line: 14, Two variables cannot be declared with the same name  'pontos'
+Semantic Error: line: 16, Variable not declared 'l'
+Semantic Error: line: 17, Assigned value (verdadeiro) must be of type: inteiro
+Semantic Error: line: 18, Function not declared 'func'
+Semantic Error: line: 20, Assigned value (1) must be of type: cadeia

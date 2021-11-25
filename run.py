@@ -31,7 +31,7 @@ def read_write_file(file_value):
     for i in range(result_size):
         with open('output\saida' + str(file_value) + '.txt', 'a') as file:
                 file.write(result_sint[i])
-
+                file.write('\n')
     with open('output\saida' + str(file_value) + '.txt', 'a') as file:
             file.write('\n' + '\n')
 
@@ -40,9 +40,8 @@ def read_write_file(file_value):
                 file.write(result_sm[i])
                 file.write('\n')
     
-    print(result_sint)
+    print(str(result_sint))
 
-read_write_file(1)
 input_list = os.listdir('input')
 output_list = os.listdir('output')
 

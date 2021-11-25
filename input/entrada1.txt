@@ -4,17 +4,19 @@ variaveis{inteiro a = 2;}
 algoritmo {
     variaveis {
         inteiro i,j,k;
+        inteiro j;
+        inteiro k;
         cadeia nome = "mariana";
         inteiro idade = 20;
         cadeia nome = "mariana";
         char sexo = 'F';
         inteiro pontos[2] = {10, 20};
         real pontos[2] = {1.3,2.2};
-        char pontos[2] = {'o','k'};
-        cadeia pontos[2] = {"ola","mundo"};
-	    booleano ans = verdadeiro;
     }
+    l = k;
     j = verdadeiro;
-    l = 2;
-    k = ans;
+    func(a);
+    k = 1;
+    nome = 1;
+    k = 1++;
 }
