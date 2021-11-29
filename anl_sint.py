@@ -92,6 +92,7 @@ class Parser:
     def start(self):
         if self.current_char[2] == "algoritmo":
             self.next_char()
+            self.scope = 'algoritmo'
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
             self.next_char()
@@ -99,10 +100,12 @@ class Parser:
             self.start()
         elif self.current_char[2] == 'variaveis':
             self.next_char()
+            self.scope = 'global'
             self.variaveis()
             self.a()
         elif self.current_char[2] == 'constantes':
             self.next_char()
+            self.scope = 'global'
             self.constantes()
             self.b()
         elif self.current_char[2] == 'registro':
@@ -115,13 +118,16 @@ class Parser:
     def a(self):
         if self.current_char[2] == "algoritmo":
             self.next_char()
+            self.scope = 'algoritmo'
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
             self.next_char()
             self.funcao()
+            print(symTable)
             self.a()
         elif self.current_char[2] == 'constantes':
             self.next_char()
+            self.scope = 'global'
             self.constantes()
             self.c()
         elif self.current_char[2] == 'registro':
@@ -134,6 +140,7 @@ class Parser:
     def b(self):
         if self.current_char[2] == "algoritmo":
             self.next_char()
+            self.scope = 'algoritmo'
             self.algoritmo()
         elif self.current_char[2] == 'funcao':
             self.next_char()
@@ -141,6 +148,7 @@ class Parser:
             self.b()
         elif self.current_char[2] == 'variaveis':
             self.next_char()
+            self.scope = 'global'
             self.variaveis()
             self.c()
         elif self.current_char[2] == 'registro':
@@ -178,7 +186,8 @@ class Parser:
 
     #FUNCAO#
     def funcao(self):
-        if self.current_char[2] == '[':
+        auxLen = len(self.pars_res)
+        if self.current_char[2] == '[':#what is this?
             self.tipocont()
             if self.current_char[1] == 'IDE':
                 self.next_char()
@@ -187,8 +196,12 @@ class Parser:
         self.next_char()
         self.tipocont()
         if self.current_char[1] == 'IDE':
+            #
+            self.scope = self.current_char[2]#set the scope with the name of the function
+            funcName = self.current_char[2]
+            ##
             self.next_char()
-            self.funcaoinit() 
+            self.funcaoinit(funcName)#I'm going to pass to the funcaoinit the name of the function so I can put it in the table later in funcaoinit 
     
     #TIPOCONT#
     def tipocont(self):
@@ -218,12 +231,16 @@ class Parser:
         else: self.next_char()
 
     #FUNCAOINIT#
-    def funcaoinit(self):
+    def funcaoinit(self, funcName):
+        #
+        sym = dict(name = funcName, type = 'function', paramList = None, scope = self.scope)
+        ##
         if self.current_char[2] == '(':
             self.next_char()
-            self.paraninit()
+            self.paraninit(sym)#I have to pass sym to continue updating the symbol table with this function's informations
             if self.current_char[2] == '{':
                 self.next_char()
+                self.scope = sym['name']
                 self.conteudo()
                 if self.current_char[2] == '}':
                     self.next_char()#talvez esse não deva estar aqui
@@ -232,20 +249,39 @@ class Parser:
         else: self.panic(self.current_char, ')')
     
     #PARANINIT#
-    def paraninit(self):
+    def paraninit(self, sym):
+        #
+        if sym['paramList'] == None:
+            params = []
+        else: 
+            params = sym['paramList']
+        auxLen = len(self.pars_res)
+        ##
         self.tipo()
+        #
+        if len(self.pars_res) == auxLen:
+            params.append(self.current_char[2])
+        ##
         self.next_char()
         if self.current_char[1] == 'IDE':
+            #
+            if len(self.pars_res) == auxLen:
+                params.append(self.current_char[2])
+                sym['paramList'] = params
+            ##
             self.next_char()
-            self.paraninitcont()
+            self.paraninitcont(sym)
         else: self.panic(self.current_char, 'Token Type: IDE')
 
     #PARANINITCONT#
-    def paraninitcont(self):
+    def paraninitcont(self, sym):
         if self.current_char[2] == ',':
             self.next_char()
-            self.paraninit()
+            self.paraninit(sym)
         elif self.current_char[2] == ')':
+            #
+            symTable.append(sym)
+            ##
             self.next_char()
     
     #CHAMADAFUNCAO#
@@ -314,16 +350,17 @@ class Parser:
             if not self.next_char():#é pra ver se tem next char?
                 return None
             else: self.prev_char()
-        elif self.current_char[1] == 'IDE':
+        elif self.current_char[1] == 'IDE':#Here two things can happen. I can make an atribution for a variable, or I can call a function
             #
             auxName = self.current_char[2]
-            varType = self.get_type(self.current_char[2])
+            varType = self.get_type(self.current_char[2], self.scope)
+            checkDeclaration = self.is_declared(auxName, self.scope)
             ##
-            #Here two things can happen. I can make an atribution for a variable, or I can call a function
             self.acessovar()
             if self.current_char[2] == '=':
                 #
-                if varType == None: self.smt_err(self.current_char[0],auxName , ' Variable not declared')
+                if checkDeclaration == -1: self.smt_err(self.current_char[0], auxName, ' Variable out of scope')
+                elif checkDeclaration == 0: self.smt_err(self.current_char[0], auxName, ' Variable not declared')
                 ##
                 self.next_char()
                 self.expatribuicao(auxName)#termina checando se o último character é o ';' então eu tenho que dar um next_char para chamar conteúdo 
@@ -678,13 +715,14 @@ class Parser:
     #EXPATRIBUICAO#
     def expatribuicao(self, leftVarName = 'default'):#ela só recebe após o '=' então eu tenho que passar o nome da variável para checar na tabela
         #
-        leftVarType = self.get_type(leftVarName)
-        rightVarType = self.get_type(self.current_char[2])
+        leftVarType = self.get_type(leftVarName, self.scope)
+        rightVarType = self.get_type(self.current_char[2], self.scope)
         ##
         if self.current_char[1] == 'IDE':
             #
             auxChar = self.current_char[2]
             auxLine = self.current_char[0]
+            declarationCheck = self.is_declared(auxChar, self.scope)# here we have the result of the declaration of the variable on the right
             ##
             self.acessovar()
             if self.current_char[2] in self.aritmetica_add_list:#se o tipo da direita for um IDE ++/-- a esquerda só pode ser real ou inteiro
@@ -693,14 +731,23 @@ class Parser:
                     self.panic(self.current_char, ';')
                 else:
                     #
+                    # if leftVarType != None:
+                    #     if rightVarType != None:
+                    #         if rightVarType == 'inteiro' or rightVarType == 'real':
+                    #             if leftVarType == rightVarType:
+                    #                 None
+                    #             else: self.smt_err(auxLine, auxChar, '', leftVarType)
+                    #         else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                    #     else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
                     if leftVarType != None:
-                        if rightVarType != None:
+                        if declarationCheck == 1:
                             if rightVarType == 'inteiro' or rightVarType == 'real':
                                 if leftVarType == rightVarType:
                                     None
                                 else: self.smt_err(auxLine, auxChar, '', leftVarType)
                             else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
-                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                        elif declarationCheck == -1: self.smt_err(auxLine, auxChar, ' Variable out of scope ')
+                        elif declarationCheck == 0: self.smt_err(auxLine, auxChar, ' Varibale not declared ')
                     ##
             elif self.current_char[2] in self.aritmetica_list:#se a direita for uma expressão aritmética a esquerda só pode ser real ou inteiro
                 self.next_char()
@@ -715,14 +762,15 @@ class Parser:
                 else:
                     if len(self.pars_res) == auxLen:
                         if leftVarType != None:
-                            if rightVarType != None:
+                            if declarationCheck == 1:
                                 if rightVarType == 'inteiro' or rightVarType == 'real':
                                     if leftVarType == rightVarType:
                                         None
                                     else: self.smt_err(auxLine, auxChar, '', leftVarType)
-                            else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
-                        else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
-                ##
+                                else: self.smt_err(auxLine, auxChar, 'Invalid operation. Variable must be an \'Inteiro\' or a \'Real\'')
+                            elif declarationCheck == -1: self.smt_err(auxLine, auxChar, ' Variable out of scope ')
+                            elif declarationCheck == 0: self.smt_err(auxLine, auxChar, ' Varibale not declared ')
+                    ##
             elif self.current_char[2] == '(':#qual tipo que pode ser se for um a()?
                 self.next_char()
                 self.paran()
@@ -732,10 +780,11 @@ class Parser:
             elif self.current_char[2] == ';':#se o lado direito for apenas um IDE, então o lado esquerdo pode ser de qualquer tipo, eles só tem que ser iguais
                 #
                 if leftVarType != None:
-                    if rightVarType != None:
+                    if declarationCheck == 1:
                         if rightVarType != leftVarType:
                             self.smt_err(auxLine, auxChar, '', leftVarType)
-                    else: self.smt_err(auxLine, auxChar, 'Varibale not declared')
+                    elif declarationCheck == -1: self.smt_err(auxLine, auxChar, ' Variable out of scope ')
+                    elif declarationCheck == 0: self.smt_err(auxLine, auxChar, ' Varibale not declared ')
                 ##
                 return None
             else: self.panic(self.current_char, ';')
@@ -743,6 +792,7 @@ class Parser:
             #
             auxChar = self.current_char[2]
             auxLine = self.current_char[0]
+            declarationCheck = self.is_declared(auxChar, self.scope)# here we have the result of the declaration of the variable on the right
             ##
             self.next_char()
             if self.current_char[2] in self.aritmetica_add_list:
@@ -967,7 +1017,7 @@ class Parser:
         self.ide()
         #
         if len(self.pars_res) == auxLen:# se no final de ter lido a variável e não teve erro nenhum eu coloco o identificador na tabela de símbolos           
-            if not self.is_declared(sym['name']):#I also need to check whether the variable has been declared or not
+            if self.is_declared(sym['name'], self.scope) == 0:#I also need to check whether the variable has been declared or not
                 symTable.append(sym)
             else: 
                 self.smt_err(self.current_char[0], self.current_char[2], ' Two variables cannot be declared with the same name ')
@@ -1002,7 +1052,7 @@ class Parser:
         #
         if len(self.pars_res) == auxLen:#uma ideia, se não for colocar símbolo errado na tabela de símbolos e checar o valor de pars-res antes e comparar depois para ver se é o mesmo, o que significa que não houv erro.
             sym = dict(name = self.current_char[2], type = type, scope = self.scope, line = str(self.current_char[0]), rule = 'VAR')
-            if not self.is_declared(sym['name']):
+            if self.is_declared(sym['name'], self.scope) == 0:
                 symTable.append(sym)
             else:
                 self.smt_err(self.current_char[0], self.current_char[2], ' Two variables cannot be declared with the same name ')
@@ -1360,7 +1410,8 @@ class Parser:
     
     #it returns the type of a given variable, if the variable has been declared
     #it takes as paramater the name of the variable
-    def get_type(self, varName):
+    def get_type(self, varName, scope):
+
         for i in range(len(symTable)):
             sym = symTable[i]
             if varName == sym['name']:
@@ -1368,12 +1419,38 @@ class Parser:
         return None
     #paramater: name of the variable
     #returns true if the given variable has been declared(is in the symbol table)
-    def is_declared(self, varName):
-        for i in range(len(symTable)):
-            sym = symTable[i]
-            if varName == sym['name']:
-                return True
-        return False
+    # def is_declared(self, varName, scope):
+    #     for i in range(len(symTable)):
+    #         sym = symTable[i]
+    #         if scope != 'global':#If I'm looking for the variable on an inner scope, it looks within that scope and then in the global scope
+    #             if sym['scope'] == scope or sym['scope'] == 'global':
+    #                 if varName == sym['name']:
+    #                     rtrn = True
+    #         elif scope == 'global':#If I'm looking for the variable on a global scope, I look only for global scope entries
+    #             if sym['scope'] == 'global':
+    #                 if varName == sym['name']:
+    #                     return True
+    #     return False
+    def is_declared(self, varName, scope):
+        if scope != 'global':
+            for i in range(len(symTable)):
+                sym = symTable[i]
+                if varName == sym['name']:#it means that it is in the table
+                    if sym['scope'] == scope or sym['scope'] == 'global':#it means it is in the avaliable scope
+                        return 1
+                    else: 
+                        return -1#it means that it is declared, but it is out of scope
+            else: return 0#it means it is not declared
+        elif scope == 'global':
+            for i in range(len(symTable)):
+                sym = symTable[i]
+                if varName == sym['name']:#it means that it is in the table
+                    if sym['scope'] == 'global':#it means it is in the avaliable scope
+                        return 1
+                    else: 
+                        return -1#it means that it is declared, but it is out of scope
+            else: return 0#it means it is not declared
+
     
     def panic(self, error_char, expected_char = ''):
         #self.counter += 1

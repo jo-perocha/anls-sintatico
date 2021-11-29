@@ -33,7 +33,7 @@ def read_write_file(file_value):
                 file.write(result_sint[i])
                 file.write('\n')
     with open('output\saida' + str(file_value) + '.txt', 'a') as file:
-            file.write('\n' + '\n')
+            file.write('\n')
 
     for i in range(result_sm_size):
         with open('output\saida' + str(file_value) + '.txt', 'a') as file:
