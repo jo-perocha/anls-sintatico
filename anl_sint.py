@@ -123,7 +123,6 @@ class Parser:
         elif self.current_char[2] == 'funcao':
             self.next_char()
             self.funcao()
-            print(symTable)
             self.a()
         elif self.current_char[2] == 'constantes':
             self.next_char()
@@ -186,12 +185,18 @@ class Parser:
 
     #FUNCAO#
     def funcao(self):
+        #
         auxLen = len(self.pars_res)
+        funcDeclarationError = False#This variable is going to be the aux to determine if there was any syntax error during the function declaration
+        ##
         if self.current_char[2] == '[':#what is this?
             self.tipocont()
             if self.current_char[1] == 'IDE':
                 self.next_char()
                 self.funcaoinit() 
+        #
+        auxType = self.current_char[2]
+        ##
         self.tipo()
         self.next_char()
         self.tipocont()
@@ -201,7 +206,10 @@ class Parser:
             funcName = self.current_char[2]
             ##
             self.next_char()
-            self.funcaoinit(funcName)#I'm going to pass to the funcaoinit the name of the function so I can put it in the table later in funcaoinit 
+            if len(self.pars_res) == auxLen:
+                funcDeclarationError = False
+            else: funcDeclarationError == True
+            self.funcaoinit(funcName, auxType, funcDeclarationError)#I'm going to pass to the funcaoinit the name of the function so I can put it in the table later in funcaoinit 
     
     #TIPOCONT#
     def tipocont(self):
@@ -231,13 +239,13 @@ class Parser:
         else: self.next_char()
 
     #FUNCAOINIT#
-    def funcaoinit(self, funcName):
+    def funcaoinit(self, funcName, retrnType, funcDeclarationError):
         #
-        sym = dict(name = funcName, type = 'function', paramList = None, scope = self.scope)
+        sym = dict(name = funcName, type = 'function', returnType = retrnType, paramList = None, scope = self.scope)
         ##
         if self.current_char[2] == '(':
             self.next_char()
-            self.paraninit(sym)#I have to pass sym to continue updating the symbol table with this function's informations
+            self.paraninit(sym, funcDeclarationError)#I have to pass sym to continue updating the symbol table with this function's informations
             if self.current_char[2] == '{':
                 self.next_char()
                 self.scope = sym['name']
@@ -249,7 +257,7 @@ class Parser:
         else: self.panic(self.current_char, ')')
     
     #PARANINIT#
-    def paraninit(self, sym):
+    def paraninit(self, sym, funcDeclarationError):
         #
         if sym['paramList'] == None:
             params = []
@@ -261,6 +269,7 @@ class Parser:
         #
         if len(self.pars_res) == auxLen:
             params.append(self.current_char[2])
+        else: funcDeclarationError == True
         ##
         self.next_char()
         if self.current_char[1] == 'IDE':
@@ -268,19 +277,45 @@ class Parser:
             if len(self.pars_res) == auxLen:
                 params.append(self.current_char[2])
                 sym['paramList'] = params
+            else: funcDeclarationError == True
             ##
             self.next_char()
-            self.paraninitcont(sym)
+            self.paraninitcont(sym, funcDeclarationError)
         else: self.panic(self.current_char, 'Token Type: IDE')
 
     #PARANINITCONT#
-    def paraninitcont(self, sym):
+    def paraninitcont(self, sym, funcDeclarationError):
         if self.current_char[2] == ',':
             self.next_char()
-            self.paraninit(sym)
+            self.paraninit(sym, funcDeclarationError)
         elif self.current_char[2] == ')':
             #
-            symTable.append(sym)
+            #I think I can check all the function problems here before appending it to the table. And I have to check if there isn't any error before appending it to the table either way
+            if funcDeclarationError == False:
+                print(symTable)
+                # if self.is_declared_type(funcName, 'function') == 1:#found the objtect declared as a function
+                # sym = self.get_item(funcName)
+                # if auxType == sym['returntype']:#if both functions have the same return type
+                #     funcDeclarationError == False
+                # else: funcDeclarationError == True
+                # elif self.is_declared_type(funcName, 'function') == -1:#found the object declared, but not as a function
+                #     funcDeclarationError == True
+                #     self.smt_err(self.current_char[0], funcName, ' Functions and variables cannot be declared with the same name ')
+                # else:#didn't find any object declared with that name
+                #     funcDeclarationError == False
+                if self.is_declared_type(sym['name'], 'function') == 1:#found the object declared as a function
+                    existentFunction = self.get_item(sym['name'])#get the function that is already declared with the name to compare the return type and the parameters
+                    print('hi')
+                    if sym['returnType'] == existentFunction['returnType']:#if the return types are the same I compare the parameters
+                        params1 = sym['paramList']
+                        params2 = existentFunction['paramList']
+                        if params1 == params2: self.smt_err(self.current_char[0], sym['name'], ' Two functions cannot be declared with the same name, return type and parameters')
+                        else: symTable.append(sym)
+                    else: self.smt_err(self.current_char[0], sym['name'], ' Cannot declare two functions with the same name and different return types ')
+                elif self.is_declared_type(sym['name'], 'function') == -1:#found the object, but not declared as a function
+                    self.smt_err(self.current_char[0], sym['name'], ' Cannot declare a function and a variable with the same name ')
+                else:#the object hasn't been declared, so I add him to the table
+                    symTable.append(sym)
             ##
             self.next_char()
     
@@ -290,7 +325,6 @@ class Parser:
         if self.current_char[2] == '(':
             self.next_char()
             self.paran()
-            print(self.current_char[2])
 
     ##ALGORITMO##
     def algoritmo(self):
@@ -934,38 +968,6 @@ class Parser:
             self.parancont()
         else: self.panic(self.current_char)
 
-    #SE#
-    # def se(self):
-    #     if self.current_char[2] in self.bool_list:
-    #         self.next_char()
-    #         if self.current_char[2] == ')':
-    #             self.next_char()
-    #             if self.current_char[2] == '{':
-    #                 self.next_char()
-    #                 self.conteudo()
-    #                 self.next_char()
-    #                 if self.current_char[2] == '}':
-    #                     self.next_char()
-    #                     self.senao()
-    #                 else: self.panic(self.current_char[0], ';')
-    #             else: self.panic(self.current_char[0], ';')
-    #         else: self.prev_char(); self.seexpressao()
-    #     elif self.current_char[1] == 'IDE':
-    #         self.next_char()
-    #         if self.current_char[2] == ')':
-    #             self.next_char()
-    #             if self.current_char[2] == '{':
-    #                 self.next_char()
-    #                 self.conteudo()
-    #                 self.next_char()
-    #                 if self.current_char[2] == '}':
-    #                     self.next_char()
-    #                     self.senao()
-    #                 else: self.panic(self.current_char[0], ';')
-    #             else: self.panic(self.current_char[0], ';')
-    #         else: self.prev_char(); self.seexpressao()
-    #     else: self.seexpressao()
-    
     #SEEXPRESSAO#
     def seexpressao(self):
         self.expressao()
@@ -1212,57 +1214,6 @@ class Parser:
             self.vetor()
         elif self.current_char[2] == '}':
             self.next_char()
-
-    
-    # def valor(self):
-    #     if self.current_char[1] == 'NRO':
-    #         return None
-    #     #indeterminacao entre -<NEGATIVO> e -<NEGATIVO><EXPARITMETICACONT>
-    #     elif self.current_char[2] == '-':#pode ser valor negativo ou expressão aritmetica negativa. Nos dois casos ele vai ser -<negativo>, <negativo> pode ser um acessovar ou um nro
-    #         self.next_char()
-    #         if self.current_char[1] == 'NRO':
-    #             self.next_char()
-    #             if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-    #                 self.exparitmeticab()
-    #             elif self.current_char[2] == '--' or self.current_char[2] == '++':
-    #                 return None
-    #             else: self.prev_char()# se ele for um -nro e não for mais nada de exparitmetica depois quer dizer que esse elemento já acabou então eu volto um character
-    #         elif self.current_char[1] == 'IDE':
-    #             self.acessovar()#acessovar já pula de character no final por causa da forma de sua construção
-    #             if self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-    #                 self.exparitmeticab()
-    #             elif self.current_char[2] == '--' or self.current_char[2] == '++':
-    #                 return None
-    #             else: self.prev_char()
-    #     elif self.current_char[1] == 'IDE':#indeterminação entre: explogica, exparitmetica, exprelacional, acessovar
-    #         self.acessovar()
-    #         if self.current_char[2] == '&&' or self.current_char[2] == '||':
-    #             self.next_char()
-    #             self.explogica()
-    #             self.next_char()
-    #             if self.current_char[2] == '==' or self.current_char[2] == '!=':
-    #                 self.exprelacionalb()
-    #             else: self.prev_char()
-    #         elif self.current_char[2] == '+' or self.current_char[2] == '-' or self.current_char[2] == '*' or self.current_char[2] == '/':
-    #                 self.exparitmeticab()
-    #                 #self.next_char()
-    #                 #if self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '>=' or self.current_char[2] == '<=' or self.current_char[2] == '<' or self.current_char[2] == '>'
-    #         elif self.current_char[2] == '--' or self.current_char[2] == '++':
-    #                 return None
-    #     elif self.current_char[1] == 'PRE':
-    #         return None#deve ter a indeterminação
-    #     elif self.current_char[1] == 'CAR':
-    #         return None
-    #     elif self.current_char[1] == 'CAD':
-    #         return None
-    #     else: self.panic(self.current_char[0], ';')
-
-        # elif self.current_char[1] == 'BOOL':#se ele for um booleano ele pode ir para dois caminhos, então se checa o que vem depois para saber qual caminho seguir
-        #     self.next_char()
-        #     if self.current_char[1] == 'LOG': self.explogica()
-        #     elif self.current_char[2] == ';': self.prev_char(); self.bool()
-        #     else: self.panic(self.current_char[0], ';')
-            
     
     def constcont(self):
         if self.current_char[2] == ',':
@@ -1400,13 +1351,6 @@ class Parser:
     def erro(self, error):
         self.pars_res.append(error)
     
-    # def panic(self, error_line, stop_char, debug = 'normal'):
-    #     self.counter += 1
-    #     error_message = 'Syntax Error on line: ' + str(error_line) + '; debug: ' + debug
-    #     self.pars_res.append(error_message)
-    #     while self.current_char[2] != stop_char:
-    #         if self.next_char():#next char retorna True caso ele chegue ao final do array, caso contrário ele simplesmente itera e retorna None
-    #             break
     
     #it returns the type of a given variable, if the variable has been declared
     #it takes as paramater the name of the variable
@@ -1417,20 +1361,26 @@ class Parser:
             if varName == sym['name']:
                 return sym['type']
         return None
-    #paramater: name of the variable
-    #returns true if the given variable has been declared(is in the symbol table)
-    # def is_declared(self, varName, scope):
-    #     for i in range(len(symTable)):
-    #         sym = symTable[i]
-    #         if scope != 'global':#If I'm looking for the variable on an inner scope, it looks within that scope and then in the global scope
-    #             if sym['scope'] == scope or sym['scope'] == 'global':
-    #                 if varName == sym['name']:
-    #                     rtrn = True
-    #         elif scope == 'global':#If I'm looking for the variable on a global scope, I look only for global scope entries
-    #             if sym['scope'] == 'global':
-    #                 if varName == sym['name']:
-    #                     return True
-    #     return False
+    #it returns an item from the symbol table that has the same type as the one passed in the argument
+    #if it finds the object you're looking for it returns it, if it finds the object but with a different type it returns -1
+    #if it doesn't find it in the list it returns 0
+    def is_declared_type(self, varName, varType):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            print(sym['name'])
+            if varName == sym['name']:
+                if varType == sym['type']:
+                    return 1
+                return -1
+        return 0
+    #returns an item from the symbolTable
+    def get_item(self, varName):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if varName == sym['name']:
+                return sym
+        return None
+    
     def is_declared(self, varName, scope):
         if scope != 'global':
             for i in range(len(symTable)):
@@ -1471,134 +1421,3 @@ class Parser:
         else:
             errorMessage = 'Semantic Error: ' + 'line: ' + str(errorLine) + ',' + errMessage + ' \'' + errorChar + '\''
         self.sm_res.append(errorMessage)
-
-
-    #SE#
-    # def se(self):
-    #     #INDETERMINAÇÕES#
-    #     if self.current_char[1] == 'IDE':
-    #         self.acessovar()#como o acessovar pode ser utilizado em outras produções, é melhor eu mandar para o acessovar com o current_char sendo tipo IDE, para que ele possa sempre checar se é realmente IDE
-    #         if self.current_char[1] == 'LOG':
-    #             self.explogicacont()
-    #         elif self.current_char[2] == ')': return None#caso ele seja apenas um acessovar sozinho
-
-    #     elif self.current_char[2] == '(':#expressão lógica, expressão relacional
-    #         self.next_char()
-    #         if self.current_char[1] == 'IDE':#chama acessovar?
-    #             self.next_char()
-    #             if self.current_char[1] == 'LOG':#O operador lógico pode ser uma expressão lógica sozinha, ou uma expressão lógica dentro de uma expressão relacionla, por isso tem que checar o que vem depois
-    #                 self.next_char()
-    #                 self.explogica()
-    #             elif(self.current_char[2] == '>' or self.current_char[2] == '<' or self.current_char[2] == '>=' or self.current_char[2] == '<='
-    #                  or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '+' or self.current_char[2] == '-'
-    #                  or self.current_char[2] == '*' or self.current_char[2] == '/' or self.current_char[2] == '--' or self.current_char[2] == '++'):#o que vem depois do ide nas produções
-    #                  self.next_char()
-    #                  self.exprelacional()
-    # def se(self):
-    #     #eu tenho que ter casos de indeterminação para quando ele começa com "(", e ver se ele vai ser uma expressão lógica, uma expressão relacional dentro de uma expresão
-    #     #lógica, ou até uma expressão aritmetica dentro de uma expressão relacional dentro de uma expressão lógica. E eu também tenho que checar todos esses casos para quando
-    #     #ele começa com IDE, ou quando ele começa com um próprio número, ou todos os casos que podem iniciar uma expressão relacional/aritmética
-    #     if self.current_char[2] == '!':
-    #         self.explogicaexc()
-    #     elif self.current_char[2] == '(':#esse vai ser a mesma coisa das produções de baixo porque tem indeterminação no "(", mas acho que ele funciona por recursão
-    #         self.explogica()
-    #         self.next_char()
-    #         if self.current_char[2] == ')':
-    #             self.explogicacont()
-    #         else: self.panic(self.current_char[0], ';')
-    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':
-    #         self.next_char()
-    #         self.explogicacont()
-    #     elif self.current_char[1] == 'IDE':#indeterminação entre acessovar e exprelacional. E eu tenho que ter a mesma coisa para o caso de não começar com IDE
-    #         self.acessovar()
-    #         #basicamente depois de uma expressão lógica começar com IDE, ela pode continuar como uma expressão lógica normal, a && b, ou pode ter uma expressão relacional
-    #         #dentro de uma expressão lógica, ou pode ter uma expressão aritmetica dentro de uma relacional, que por sua vez está dentro da expressão lógica.
-    #         if self.current_char[1] == 'LOG':
-    #             self.explogica()
-    #         #expressão relacional dentro de logica
-    #         elif(self.current_char[2] in self.relacional_list):
-    #             self.next_char()
-    #             self.exprelacionalb()#depois eu tenho que conferir e chamar o termino da expressão lógica
-    #             self.next_char()
-    #             if self.current_char[2] == '&&' or self.current_char[2] == '||':
-    #                 self.explogica()
-    #         #expressão aritmetica dentro de uma relacional dentro de uma logica
-    #         elif(self.current_char[2] in self.aritmetica_list):#se for uma expressão aritmética dentro de uma expressão relacional dentro de uma expressão lógica. Eu chamo a aritmética e depois chamo relacionalcont e depois checa para ver o lógico que vem depois
-    #             self.next_char()
-    #             self.exparitmeticab()
-    #         elif self.current_char[2] in self.aritmetica_add_list:#depois de '--' '++' tem que vir um operador relacional?
-    #             self.next_char()
-    #             if self.current_char[2] in self.relacional_list:#expressão relacional e depois a finalização da expressão lógica
-    #                 self.exprelacional()
-    #                 self.next_char()
-    #                 if self.current_char[2] in self.logica_list:
-    #                     self.explogica()
-    #                 else: self.panic(self.current_char[0], ';')
-    #             else: self.panic(self.current_char[0], ';')
-    #         else: self.panic(self.current_char[0], ';')
-
-
-
-    #     elif self.current_char[2] == '!':#expressão lógica
-    #         self.explogica()
-
-    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':#booleano, expressão lógica, expressão relacional
-    #         self.explogica()
-
-    #     #EXPRELACIONAL#
-    #     elif self.current_char[1] == 'NRO' or self.current_char[2] == '-':
-    #         self.exprelacional()
-
-        # elif self.curren_char[2] == 'verdadeiro' or if self.current_char[2] == 'falso':
-        # elif self.curren_char[1] == 'NRO':
-        # elif self.curren_char[2] == '-':
-        # elif self.current_char[2] == '!':
-        # elif self.current_char[2] == '(':
-        # elif self.current_char[1] == 'CHAR':     
-        # elif(self.current_char[2] == '<' or self.current_char[2] == '>' or self.current_char[2] == '!=' or self.current_char[2] == '==' or self.current_char[2] == '(' or self.current_char[2] == '-'
-                 #or self.current_char[2] == '<=' or self.current_char[2] == '>=' or self.current_char[1] == 'IDE' or self.current_char[1] == 'CHAR' or self.current_char[1] == 'NRO'):   
-
-    #EXPLOGICA#
-    # def se(self):
-    #     #eu tenho que ter casos de indeterminação para quando ele começa com "(", e ver se ele vai ser uma expressão lógica, uma expressão relacional dentro de uma expresão
-    #     #lógica, ou até uma expressão aritmetica dentro de uma expressão relacional dentro de uma expressão lógica. E eu também tenho que checar todos esses casos para quando
-    #     #ele começa com IDE, ou quando ele começa com um próprio número, ou todos os casos que podem iniciar uma expressão relacional/aritmética
-    #     if self.current_char[2] == '!':
-    #         self.explogicaexc()
-    #     elif self.current_char[2] == '(':#esse vai ser a mesma coisa das produções de baixo porque tem indeterminação no "(", mas acho que ele funciona por recursão
-    #         self.explogica()
-    #         self.next_char()
-    #         if self.current_char[2] == ')':
-    #             self.explogicacont()
-    #         else: self.panic(self.current_char[0], ';')
-    #     elif self.current_char[2] == 'verdadeiro' or self.current_char[2] == 'falso':
-    #         self.next_char()
-    #         self.explogicacont()
-    #     elif self.current_char[1] == 'IDE':#indeterminação entre acessovar e exprelacional. E eu tenho que ter a mesma coisa para o caso de não começar com IDE
-    #         self.acessovar()
-    #         #basicamente depois de uma expressão lógica começar com IDE, ela pode continuar como uma expressão lógica normal, a && b, ou pode ter uma expressão relacional
-    #         #dentro de uma expressão lógica, ou pode ter uma expressão aritmetica dentro de uma relacional, que por sua vez está dentro da expressão lógica.
-    #         if self.current_char[1] == 'LOG':
-    #             self.explogica()
-    #         #expressão relacional dentro de logica
-    #         elif(self.current_char[2] in self.relacional_list):
-    #             self.next_char()
-    #             self.exprelacionalb()#depois eu tenho que conferir e chamar o termino da expressão lógica
-    #             self.next_char()
-    #             if self.current_char[2] == '&&' or self.current_char[2] == '||':
-    #                 self.explogica()
-    #         #expressão aritmetica dentro de uma relacional dentro de uma logica
-    #         elif(self.current_char[2] in self.aritmetica_list):#se for uma expressão aritmética dentro de uma expressão relacional dentro de uma expressão lógica. Eu chamo a aritmética e depois chamo relacionalcont e depois checa para ver o lógico que vem depois
-    #             self.next_char()
-    #             self.exparitmeticab()
-    #         elif self.current_char[2] in self.aritmetica_add_list:#depois de '--' '++' tem que vir um operador relacional?
-    #             self.next_char()
-    #             if self.current_char[2] in self.relacional_list:#expressão relacional e depois a finalização da expressão lógica
-    #                 self.exprelacional()
-    #                 self.next_char()
-    #                 if self.current_char[2] in self.logica_list:
-    #                     self.explogica()
-    #                 else: self.panic(self.current_char[0], ';')
-    #             else: self.panic(self.current_char[0], ';')
-    #         else: self.panic(self.current_char[0], ';')
-            

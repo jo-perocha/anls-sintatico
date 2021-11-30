@@ -2,7 +2,10 @@
 
 variaveis{inteiro a = 2;}
 funcao inteiro func(inteiro a, real b){
-        a = 3;
+    a = 3;
+}
+funcao real func(inteiro a, real c){
+    a = 4;
 }
 algoritmo {
     variaveis {
