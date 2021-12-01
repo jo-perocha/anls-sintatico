@@ -241,7 +241,7 @@ class Parser:
     #FUNCAOINIT#
     def funcaoinit(self, funcName, retrnType, funcDeclarationError):
         #
-        sym = dict(name = funcName, type = 'function', returnType = retrnType, paramList = None, scope = self.scope)
+        sym = dict(name = funcName, type = 'function', returnType = retrnType, paramList = None, scope = self.scope, rule = 'FUNC')
         ##
         if self.current_char[2] == '(':
             self.next_char()
@@ -292,7 +292,6 @@ class Parser:
             #
             #I think I can check all the function problems here before appending it to the table. And I have to check if there isn't any error before appending it to the table either way
             if funcDeclarationError == False:
-                print(symTable)
                 # if self.is_declared_type(funcName, 'function') == 1:#found the objtect declared as a function
                 # sym = self.get_item(funcName)
                 # if auxType == sym['returntype']:#if both functions have the same return type
@@ -305,7 +304,6 @@ class Parser:
                 #     funcDeclarationError == False
                 if self.is_declared_type(sym['name'], 'function') == 1:#found the object declared as a function
                     existentFunction = self.get_item(sym['name'])#get the function that is already declared with the name to compare the return type and the parameters
-                    print('hi')
                     if sym['returnType'] == existentFunction['returnType']:#if the return types are the same I compare the parameters
                         params1 = sym['paramList']
                         params2 = existentFunction['paramList']
@@ -384,17 +382,21 @@ class Parser:
             if not self.next_char():#é pra ver se tem next char?
                 return None
             else: self.prev_char()
-        elif self.current_char[1] == 'IDE':#Here two things can happen. I can make an atribution for a variable, or I can call a function
+        elif self.current_char[1] == 'IDE':#Here three things can happen. I can make an atribution for a variable, a constant or I can call a function
             #
             auxName = self.current_char[2]
             varType = self.get_type(self.current_char[2], self.scope)
+            valueRule = self.get_rule(self.current_char[2], self.scope)
             checkDeclaration = self.is_declared(auxName, self.scope)
             ##
             self.acessovar()
             if self.current_char[2] == '=':
                 #
-                if checkDeclaration == -1: self.smt_err(self.current_char[0], auxName, ' Variable out of scope')
-                elif checkDeclaration == 0: self.smt_err(self.current_char[0], auxName, ' Variable not declared')
+                if valueRule == 'CONST':
+                    self.smt_err(self.current_char[0], auxName, ' The value of constants cannot be changed')
+                else:
+                    if checkDeclaration == -1: self.smt_err(self.current_char[0], auxName, ' Variable out of scope')
+                    elif checkDeclaration == 0: self.smt_err(self.current_char[0], auxName, ' Variable not declared')
                 ##
                 self.next_char()
                 self.expatribuicao(auxName)#termina checando se o último character é o ';' então eu tenho que dar um next_char para chamar conteúdo 
@@ -1078,11 +1080,25 @@ class Parser:
 
     ##CONST##
     def const(self):
+        #
+        auxLen = len(self.pars_res)
+        ##
         self.tipo()
+        #
+        auxTipo = self.current_char[2]
+        ##
         self.next_char()
         self.ide()
+        #
+        auxName = self.current_char[2]
+        ##
         self.next_char()
-        self.varinit()
+        self.varinit(auxTipo)
+        #
+        if auxLen == len(self.pars_res):
+            sym = dict(name = auxName, type = auxTipo, rule = 'CONST', scope = self.scope)
+            symTable.append(sym)
+        ##
         self.constcont()
     
     ##TIPO##
@@ -1107,9 +1123,16 @@ class Parser:
             self.panic(self.current_char, 'Token Type: IDE')
 
     #VARINIT#
-    def varinit(self):
+    def varinit(self, leftVarType = None):
         if self.current_char[2] == '=':
+            #when I'm declaring a constant or a variable with an attribution, I need to check if both the right and left values match types. For that I can pass the type of the left
+            #value as a parameter, and check with the current value being assigned.
             self.next_char()
+            #
+            if leftVarType != None:
+                if not self.is_type_equal(leftVarType, self.current_char[1]):#I can't compare both types directly because the type TOKEN is different from the written programming language
+                    self.smt_err(self.current_char[0], self.current_char[2], ' Invalid type attribution')
+            ##
             self.valor()
             if self.current_char[2] != ',':
                 if self.current_char[2] == ';':
@@ -1233,7 +1256,7 @@ class Parser:
         if self.current_char[1] == 'PRE':
             self.const()
         elif self.current_char[2] == '}':
-            return None
+            self.next_char()
         
 
     def leia(self):
@@ -1351,7 +1374,14 @@ class Parser:
     def erro(self, error):
         self.pars_res.append(error)
     
-    
+    #it returns the rule of the value, if it is a constant, a variable, registro, etc.
+    def get_rule(self, varName, scope):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if varName == sym['name']:
+                if sym['scope'] == scope or sym['scope'] == 'global':
+                    return sym['rule']
+
     #it returns the type of a given variable, if the variable has been declared
     #it takes as paramater the name of the variable
     def get_type(self, varName, scope):
@@ -1367,12 +1397,26 @@ class Parser:
     def is_declared_type(self, varName, varType):
         for i in range(len(symTable)):
             sym = symTable[i]
-            print(sym['name'])
             if varName == sym['name']:
                 if varType == sym['type']:
                     return 1
                 return -1
         return 0
+
+    def is_type_equal(self, leftVarType, rightVarType):
+        #se o valor a direita for um IDE eu tenho que olhar o tipo dele, se não é só comparar o tipo direto do valor
+        if leftVarType == 'inteiro' and rightVarType == 'NRO':
+            return True
+        elif leftVarType == 'cadeia' and rightVarType == 'CAD':
+            return True
+        elif leftVarType == 'char' and rightVarType == 'CAR':
+            return True
+        elif leftVarType == 'real' and rightVarType == 'NRO':
+            return True
+        elif leftVarType == 'booleano' and (rightVarType == 'verdadeiro' or rightVarType == 'falso'):
+            return True
+        
+
     #returns an item from the symbolTable
     def get_item(self, varName):
         for i in range(len(symTable)):

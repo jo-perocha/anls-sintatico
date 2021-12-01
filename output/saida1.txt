@@ -1,10 +1,11 @@
 
-Semantic Error: line: 7, Cannot declare two functions with the same name and different return types  'func'
-Semantic Error: line: 13, Two variables cannot be declared with the same name  'j'
-Semantic Error: line: 14, Two variables cannot be declared with the same name  'k'
-Semantic Error: line: 17, Two variables cannot be declared with the same name  'nome'
-Semantic Error: line: 20, Two variables cannot be declared with the same name  'pontos'
-Semantic Error: line: 22, Variable not declared 'l'
-Semantic Error: line: 23, Varibale not declared  'm'
-Semantic Error: line: 24, Assigned value (verdadeiro) must be of type: inteiro
-Semantic Error: line: 27, Assigned value (1) must be of type: cadeia
+Semantic Error: line: 4, Invalid type attribution 'a'
+Semantic Error: line: 14, Two variables cannot be declared with the same name  'j'
+Semantic Error: line: 15, Two variables cannot be declared with the same name  'k'
+Semantic Error: line: 18, Two variables cannot be declared with the same name  'nome'
+Semantic Error: line: 21, Two variables cannot be declared with the same name  'pontos'
+Semantic Error: line: 23, The value of constants cannot be changed 'x'
+Semantic Error: line: 24, Variable not declared 'l'
+Semantic Error: line: 25, Varibale not declared  'm'
+Semantic Error: line: 26, Assigned value (verdadeiro) must be of type: inteiro
+Semantic Error: line: 29, Assigned value (1) must be of type: cadeia
