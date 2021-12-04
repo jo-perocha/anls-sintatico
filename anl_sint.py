@@ -106,7 +106,8 @@ class Parser:
         elif self.current_char[2] == 'constantes':
             self.next_char()
             self.scope = 'global'
-            self.constantes()
+            isConstant = True
+            self.constantes(isConstant)
             self.b()
         elif self.current_char[2] == 'registro':
             self.next_char()
@@ -127,7 +128,8 @@ class Parser:
         elif self.current_char[2] == 'constantes':
             self.next_char()
             self.scope = 'global'
-            self.constantes()
+            isConstant = True
+            self.constantes(isConstant)
             self.c()
         elif self.current_char[2] == 'registro':
             self.next_char()
@@ -968,7 +970,35 @@ class Parser:
                 if rightVarType != leftVarType:
                     self.smt_err(auxLine, auxChar, '', leftVarType)
             ##
-
+        #
+        elif self.current_char[1] == 'CAD':
+            #
+            auxChar = self.current_char[2]
+            auxLine = self.current_char[0]
+            ##
+            self.next_char()
+            if self.current_char[2] != ';':
+                self.panic(self.current_char, ';')
+            #
+            else: 
+                if leftVarType != 'cadeia':
+                    self.smt_err(auxLine, auxChar, '', leftVarType)
+            ##
+        elif self.current_char[1] == 'CAR':
+            #
+            print('hi')
+            auxChar = self.current_char[2]
+            auxLine = self.current_char[0]
+            ##
+            self.next_char()
+            if self.current_char[2] != ';':
+                self.panic(self.current_char, ';')
+            #
+            else: 
+                if leftVarType != 'char':
+                    self.smt_err(auxLine, auxChar, '', leftVarType)
+            ##
+        ##
     #VALOR#
     def valor(self):
         if self.current_char[1] == 'IDE':
@@ -1068,7 +1098,7 @@ class Parser:
         if self.current_char[2] == ',' or self.current_char[2] == ';':#isso permite a produção de só um ','
             self.varfinal(type)
         else:
-            self.varinit()
+            self.varinit(type)
             #self.next_char()
             self.varfinal(type)
 
@@ -1106,14 +1136,14 @@ class Parser:
             self.var()
 
     ##CONSTANTES##
-    def constantes(self):
+    def constantes(self, isConstant):
         if self.current_char[2] == '{':
             self.next_char()
-            self.const()
+            self.const(isConstant)
         else: self.panic(self.current_char, '{')
 
     ##CONST##
-    def const(self):
+    def const(self, isConstant):
         #
         auxLen = len(self.pars_res)
         ##
@@ -1127,7 +1157,7 @@ class Parser:
         auxName = self.current_char[2]
         ##
         self.next_char()
-        self.varinit(auxTipo)
+        self.varinit(auxTipo, isConstant)
         #
         if auxLen == len(self.pars_res):
             sym = dict(name = auxName, type = auxTipo, rule = 'CONST', scope = self.scope)
@@ -1157,18 +1187,25 @@ class Parser:
             self.panic(self.current_char, 'Token Type: IDE')
 
     #VARINIT#
-    def varinit(self, leftVarType = None):
+    def varinit(self, leftVarType = None, isConstant = False):
         if self.current_char[2] == '=':
             #when I'm declaring a constant or a variable with an attribution, I need to check if both the right and left values match types. For that I can pass the type of the left
             #value as a parameter, and check with the current value being assigned.
             self.next_char()
+            print(self.current_char[1])
+            print(leftVarType)
             #
             if leftVarType != None:
+                print(self.current_char[0])
                 if not self.is_type_equal(leftVarType, self.current_char[1]):#I can't compare both types directly because the type TOKEN is different from the written programming language
                     auxType = self.current_char[1]
                     if auxType == 'CAR' or auxType == 'CAD' or auxType == 'NRO' or auxType == 'verdadeiro' or auxType == 'falso':
                         self.smt_err(self.current_char[0], self.current_char[2], ' Invalid type attribution')
-                    else: self.smt_err(self.current_char[0], self.current_char[2], ' Constants can only be declared with an explicit value. Invalid')
+                    else:
+                        if isConstant == True: 
+                            self.smt_err(self.current_char[0], self.current_char[2], ' Constants can only be declared with an explicit value. Invalid')
+                        else: 
+                            self.smt_err(self.current_char[0], self.current_char[2], ' Invalid type attribution')
             ##
             self.valor()
             if self.current_char[2] != ',':
@@ -1498,6 +1535,8 @@ class Parser:
             if varName == sym['name']:
                 return sym
         return None
+
+    #def is_declared_within_function
 
     #it check if the variable/constant/etc is declared independent of the scope
     #used to check for value declaration with the same name

@@ -1,11 +1,16 @@
 
 
-variaveis{inteiro a = 2;}
+variaveis{inteiro a = b;}
 constantes{inteiro x = a;}
-funcao inteiro func(inteiro a, real b){
-    a = 3;
+funcao inteiro func(inteiro w, real b){
+    w = 3;
+    variaveis {
+        inteiro w;
+    }
+    c = 3;
+    x = 2;
 }
-funcao inteiro func(inteiro a, inteiro b){
+funcao inteiro func(real b, inteiro w){
     a = 4;
 }
 algoritmo {
@@ -13,7 +18,7 @@ algoritmo {
         inteiro i,j,k;
         inteiro j;
         inteiro k;
-        cadeia nome = "mariana";
+        cadeia nome = 2;
         inteiro idade = 20;
         cadeia nome = "mariana";
         char sexo = 'F';
@@ -23,9 +28,11 @@ algoritmo {
     x = 3;
     l = k;
     k = m;
-    j = verdadeiro;
-    func(a);
+    w = 4;
+    j = "som";
+    test(a);
     k = 1;
+    i = 3;
     nome = 1;
     k = 1++;
 }

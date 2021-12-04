@@ -1,15 +1,20 @@
 
+Semantic Error: line: 3, Invalid type attribution 'b'
 Semantic Error: line: 4, Constants can only be declared with an explicit value. Invalid 'a'
-Semantic Error: line: 5, Two variables cannot be declared with the same name 'a'
-Semantic Error: line: 7, No return statement in the function 'func'
-Semantic Error: line: 8, Two variables cannot be declared with the same name 'a'
-Semantic Error: line: 10, No return statement in the function 'func'
-Semantic Error: line: 14, Two variables cannot be declared with the same name  'j'
-Semantic Error: line: 15, Two variables cannot be declared with the same name  'k'
-Semantic Error: line: 18, Two variables cannot be declared with the same name  'nome'
-Semantic Error: line: 21, Two variables cannot be declared with the same name  'pontos'
-Semantic Error: line: 23, The value of constants cannot be changed 'x'
-Semantic Error: line: 24, Variable not declared 'l'
-Semantic Error: line: 25, Varibale not declared  'm'
-Semantic Error: line: 26, Assigned value (verdadeiro) must be of type: inteiro
-Semantic Error: line: 29, Assigned value (1) must be of type: cadeia
+Semantic Error: line: 8, Two variables cannot be declared with the same name  'w'
+Semantic Error: line: 10, Variable not declared 'c'
+Semantic Error: line: 11, The value of constants cannot be changed 'x'
+Semantic Error: line: 12, No return statement in the function 'func'
+Semantic Error: line: 15, No return statement in the function 'func'
+Semantic Error: line: 19, Two variables cannot be declared with the same name  'j'
+Semantic Error: line: 20, Two variables cannot be declared with the same name  'k'
+Semantic Error: line: 21, Invalid type attribution '2'
+Semantic Error: line: 23, Two variables cannot be declared with the same name  'nome'
+Semantic Error: line: 26, Two variables cannot be declared with the same name  'pontos'
+Semantic Error: line: 28, The value of constants cannot be changed 'x'
+Semantic Error: line: 29, Variable not declared 'l'
+Semantic Error: line: 30, Varibale not declared  'm'
+Semantic Error: line: 31, Variable not declared 'w'
+Semantic Error: line: 32, Assigned value ("som") must be of type: inteiro
+Semantic Error: line: 33, Function not declared 'test'
+Semantic Error: line: 36, Assigned value (1) must be of type: cadeia
