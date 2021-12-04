@@ -241,7 +241,7 @@ class Parser:
     #FUNCAOINIT#
     def funcaoinit(self, funcName, retrnType, funcDeclarationError):
         #
-        sym = dict(name = funcName, type = 'function', returnType = retrnType, paramList = None, scope = self.scope, rule = 'FUNC')
+        sym = dict(name = funcName, type = 'function', returnType = retrnType, paramList = None, scope = self.scope, rule = 'FUNC', line = self.current_char[0])
         ##
         if self.current_char[2] == '(':
             self.next_char()
@@ -249,7 +249,15 @@ class Parser:
             if self.current_char[2] == '{':
                 self.next_char()
                 self.scope = sym['name']
-                self.conteudo()
+                returnType = self.conteudo()#in case there is a return conteudo() returns the return type so that I can check the semantic of returns in functions
+                #Here, at the end of the function I need to remove the variables that belong to this function
+                #
+                self.remove_function_variables(sym['paramList'])
+                if returnType != None:
+                    if returnType != sym['returnType']:
+                        self.smt_err(self.current_char[0], returnType, ' Return does not match the function\'s return type')
+                else: self.smt_err(self.current_char[0], sym['name'], ' No return statement in the function')
+                ##
                 if self.current_char[2] == '}':
                     self.next_char()#talvez esse não deva estar aqui
                 else: self.panic(self.current_char, '}')
@@ -275,8 +283,14 @@ class Parser:
         if self.current_char[1] == 'IDE':
             #
             if len(self.pars_res) == auxLen:
-                params.append(self.current_char[2])
-                sym['paramList'] = params
+                #If the name of the param variable I'm declaring is already on the symbol table I cannot declare the function with this paramater
+                if self.is_declared_all_scopes(self.current_char[2]):
+                    params.pop()#and I have to remove the type of the parameter that was added in line 271
+                    self.smt_err(self.current_char[0], self.current_char[2], ' Two variables cannot be declared with the same name')
+                    funcDeclarationError == True
+                else:
+                    params.append(self.current_char[2])
+                    sym['paramList'] = params
             else: funcDeclarationError == True
             ##
             self.next_char()
@@ -308,12 +322,30 @@ class Parser:
                         params1 = sym['paramList']
                         params2 = existentFunction['paramList']
                         if params1 == params2: self.smt_err(self.current_char[0], sym['name'], ' Two functions cannot be declared with the same name, return type and parameters')
-                        else: symTable.append(sym)
+                        else: 
+                            symTable.append(sym)
+                            #after I checked that the declaration of the function is all right and I added it to the symbol table, I need to add it's parameters as variables in the symbol table
+                            params = sym['paramList']
+                            for i in range(len(params)):
+                                if i % 2 == 0:
+                                    insertSym = dict(scope = sym['scope'], rule = 'VAR', line = sym['line'])
+                                    insertSym['type'] = params[i]
+                                else:
+                                    insertSym['name'] = params[i]
+                                    symTable.append(insertSym)
                     else: self.smt_err(self.current_char[0], sym['name'], ' Cannot declare two functions with the same name and different return types ')
                 elif self.is_declared_type(sym['name'], 'function') == -1:#found the object, but not declared as a function
                     self.smt_err(self.current_char[0], sym['name'], ' Cannot declare a function and a variable with the same name ')
                 else:#the object hasn't been declared, so I add him to the table
                     symTable.append(sym)
+                    params = sym['paramList']
+                    for i in range(len(params)):
+                        if i % 2 == 0:
+                            insertSym = dict(scope = sym['scope'], rule = 'VAR', line = sym['line'])
+                            insertSym['type'] = params[i]
+                        else:
+                            insertSym['name'] = params[i]
+                            symTable.append(insertSym)
             ##
             self.next_char()
     
@@ -372,9 +404,11 @@ class Parser:
             return True
         elif self.current_char[2] == 'retorno':
             self.next_char()
-            self.retorno()
+            returnType = self.retorno()
             self.next_char()
-            return True
+            #this is the line i'm supposed to change if something goes wrong, also no return in retorno()
+            #return True
+            return returnType
         elif self.current_char[2] == '}':#quer dizer que o conteudo foi 'conteudo{}' NAO, NAO QUER DIZER NAO, pra ver se foi conteudo{}, eu posso checar se o char anterior é {. Do contrário é uma produção vazia 
 
             return False
@@ -1131,7 +1165,10 @@ class Parser:
             #
             if leftVarType != None:
                 if not self.is_type_equal(leftVarType, self.current_char[1]):#I can't compare both types directly because the type TOKEN is different from the written programming language
-                    self.smt_err(self.current_char[0], self.current_char[2], ' Invalid type attribution')
+                    auxType = self.current_char[1]
+                    if auxType == 'CAR' or auxType == 'CAD' or auxType == 'NRO' or auxType == 'verdadeiro' or auxType == 'falso':
+                        self.smt_err(self.current_char[0], self.current_char[2], ' Invalid type attribution')
+                    else: self.smt_err(self.current_char[0], self.current_char[2], ' Constants can only be declared with an explicit value. Invalid')
             ##
             self.valor()
             if self.current_char[2] != ',':
@@ -1314,9 +1351,11 @@ class Parser:
         else: self.panic(self.current_char)
 
     def retorno(self):
+        returnType = self.current_char[1]
         self.valor()
         if self.current_char[2] != ";":
             self.panic(self.current_char, ';')
+        return returnType
 
     def bool(self):
         if self.current_char[2] != 'verdadeiro' and self.current_char[2] != 'falso':
@@ -1334,7 +1373,7 @@ class Parser:
     def acessovarcont(self):
         if self.current_char[2] == '.':
             self.next_char()
-            self.acessovar()
+            self.acessovar() 
         elif self.current_char[2] == '[':
             self.next_char()
             if self.current_char[1] == 'NRO':
@@ -1374,6 +1413,24 @@ class Parser:
     def erro(self, error):
         self.pars_res.append(error)
     
+    def remove_table(self, type, name):
+        remove = []
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if sym['name'] == name and sym['type'] == type:
+                remove.append(i)#to avoid having problems from altering the list while iterating it, I'm gonna keep the indexes of the positions to remove on another list
+        for i in range(len(remove)):
+            symTable.pop(remove[i])
+
+    #this functino goes through the list of the variables to be removed from the list and calls the remove functin for each variable
+    def remove_function_variables(self, params):
+        for i in range(len(params)):
+            if i % 2 == 0:
+                auxType = params[i]
+            else: 
+                auxName = params[i]
+                self.remove_table(auxType, auxName)
+    
     #it returns the rule of the value, if it is a constant, a variable, registro, etc.
     def get_rule(self, varName, scope):
         for i in range(len(symTable)):
@@ -1381,6 +1438,23 @@ class Parser:
             if varName == sym['name']:
                 if sym['scope'] == scope or sym['scope'] == 'global':
                     return sym['rule']
+    #for some reason it was not working to insert the itmes on the symbol table directly on the function. So the function retutnrs
+    #the list of parameters for them to be inserted on the symbol table as variables
+    def add_parameters_to_table(self, funcSym):
+        params = funcSym['paramList']
+        insert_table = []
+        auxLen = len(params)
+        for i in range(auxLen):
+            # if (i%2) == 0:
+            #     print(params[i])
+            if (i % 2) == 0:
+                sym = dict(scope = funcSym['scope'], rule = 'VAR', line = funcSym['line'])
+                sym['type'] = params[i]
+            else: 
+                sym['name'] = params[i]
+                insert_table.append(sym)
+        return insert_table
+                
 
     #it returns the type of a given variable, if the variable has been declared
     #it takes as paramater the name of the variable
@@ -1424,7 +1498,18 @@ class Parser:
             if varName == sym['name']:
                 return sym
         return None
+
+    #it check if the variable/constant/etc is declared independent of the scope
+    #used to check for value declaration with the same name
+    def is_declared_all_scopes(self, varName):
+        for i in range(len(symTable)):
+            sym = symTable[i]
+            if varName == sym['name']:
+                return True
+        return False
     
+    #tells if the variable/constant/etc is declared withing the scope, out of the scope or if it hasn't been declared at all
+    #used to check the usage of variables on different scopes
     def is_declared(self, varName, scope):
         if scope != 'global':
             for i in range(len(symTable)):

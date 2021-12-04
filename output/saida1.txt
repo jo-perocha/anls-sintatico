@@ -1,5 +1,9 @@
 
-Semantic Error: line: 4, Invalid type attribution 'a'
+Semantic Error: line: 4, Constants can only be declared with an explicit value. Invalid 'a'
+Semantic Error: line: 5, Two variables cannot be declared with the same name 'a'
+Semantic Error: line: 7, No return statement in the function 'func'
+Semantic Error: line: 8, Two variables cannot be declared with the same name 'a'
+Semantic Error: line: 10, No return statement in the function 'func'
 Semantic Error: line: 14, Two variables cannot be declared with the same name  'j'
 Semantic Error: line: 15, Two variables cannot be declared with the same name  'k'
 Semantic Error: line: 18, Two variables cannot be declared with the same name  'nome'
