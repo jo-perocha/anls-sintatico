@@ -1,7 +1,7 @@
 
 
-variaveis{inteiro a = b;}
-constantes{inteiro x = a;}
+variaveis{inteiro a = 3;}
+constantes{inteiro x = 2;}
 funcao inteiro func(inteiro w, real b){
     w = 3;
     variaveis {

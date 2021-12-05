@@ -1,6 +1,4 @@
 
-Semantic Error: line: 3, Invalid type attribution 'b'
-Semantic Error: line: 4, Constants can only be declared with an explicit value. Invalid 'a'
 Semantic Error: line: 8, Two variables cannot be declared with the same name  'w'
 Semantic Error: line: 10, Variable not declared 'c'
 Semantic Error: line: 11, The value of constants cannot be changed 'x'
