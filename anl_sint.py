@@ -353,6 +353,7 @@ class Parser:
     
     #CHAMADAFUNCAO#
     def chamadafuncao(self):
+        funcName = self.current_char[2]
         self.acessovar()
         if self.current_char[2] == '(':
             self.next_char()
@@ -441,7 +442,7 @@ class Parser:
             elif self.current_char[2] == '(':
                 if varType == None: self.smt_err(self.current_char[0],auxName , ' Function not declared')
                 self.next_char()
-                self.paran()
+                self.paran(auxName)
                 self.conteudo()
         elif self.current_char[2] == 'enquanto':
             self.next_char()
@@ -986,7 +987,6 @@ class Parser:
             ##
         elif self.current_char[1] == 'CAR':
             #
-            print('hi')
             auxChar = self.current_char[2]
             auxLine = self.current_char[0]
             ##
@@ -1012,26 +1012,44 @@ class Parser:
         else: self.expressao()
 
     #PARAN#
-    def paran(self):
-        if self.current_char[2] == ')':
+    def paran(self, funcName = None):
+        if self.current_char[2] == ')':#if this happens it means the function was called without parameters
             return None
-        else: self.parancont()
+        else: 
+            params = []
+            self.parancont(params, funcName)#otherwise I have to pass the list of parameters from paran to paranfim to check with the original function
     
     #PARACONT#
-    def parancont(self):
+    def parancont(self, params, funcName):
+        #
+        params.append(self.current_char[1])
+        params.append(self.current_char[2])
+        ##
         self.valor()
-        self.paranfim()
+        self.paranfim(params, funcName)
 
     #PARANFIM#
-    def paranfim(self):
+    def paranfim(self, params, funcName):
         if self.current_char[2] == ')':
             self.next_char()
             if self.current_char[2] != ';':
                 self.panic(self.current_char, ';')
-            else: self.next_char()
+            else:
+                #
+                resulta, resultb = self.are_parameters_equal(funcName, params)
+                #print(resulta, resultb)
+                print(resulta, resultb)
+                if resulta == 'number of parameters does not match':
+                    self.smt_err(self.current_char[0], funcName, ' The number of parameters does not match the function declaration')
+                elif resulta == 'parameters are not declared':
+                    self.smt_err(self.current_char[0], resultb, ' Parameter(s) are not declared')
+                elif resultb != None:
+                    self.smt_err(self.current_char[0], funcName, ' Parameter ' + '\'' + str(resulta) + '\'' + ' is supposed to be of the type: ' + '\'' + str(resultb) + '\'')
+                ##
+                self.next_char()
         elif self.current_char[2] == ',':
             self.next_char()
-            self.parancont()
+            self.parancont(params, funcName)
         else: self.panic(self.current_char)
 
     #SEEXPRESSAO#
@@ -1192,11 +1210,8 @@ class Parser:
             #when I'm declaring a constant or a variable with an attribution, I need to check if both the right and left values match types. For that I can pass the type of the left
             #value as a parameter, and check with the current value being assigned.
             self.next_char()
-            print(self.current_char[1])
-            print(leftVarType)
             #
             if leftVarType != None:
-                print(self.current_char[0])
                 if not self.is_type_equal(leftVarType, self.current_char[1]):#I can't compare both types directly because the type TOKEN is different from the written programming language
                     auxType = self.current_char[1]
                     if auxType == 'CAR' or auxType == 'CAD' or auxType == 'NRO' or auxType == 'verdadeiro' or auxType == 'falso':
@@ -1467,6 +1482,41 @@ class Parser:
             else: 
                 auxName = params[i]
                 self.remove_table(auxType, auxName)
+
+    def are_parameters_equal(self, funcName, callParams):
+        for i in range(len(symTable)):#search for the the funcion with the same name as the one in the function call
+            sym = symTable[i]
+            if sym['name'] == funcName:
+                funcParams = sym['paramList']#if I find a declared function with the same name, I'm gonna get the list of parameters to compare
+
+                # for i in range(len(funcParams)):#Here I'm just cutting the list to only have the type of the parameters on the declaration of the function, and I put that into compareParams
+                #     if i % 2 == 0:
+                #         compareParams.append[funcParams[i]]
+
+                if len(callParams) != len(funcParams):#it means there are not enough, or there are too many parameters on the function call
+                    return 'number of parameters does not match', None
+                else:
+                    for i in range(len(callParams)):#I'm going to iterate through the list of parameters
+                        if i % 2 == 0:#as both lists have the type of the paremeter and then the parameter name on them, I only need to look at their types
+                            paramC = callParams[i]
+                            paramF = funcParams[i]
+                            if paramC != 'IDE':
+                                if not self.is_type_equal(paramF, paramC):#if one of them is different, then I return the ones that are different
+                                    return callParams[i+1], paramF#type paramC was supposed to be paramF
+                            else:#if the parameter in the function calling is an IDE, I have to search for it's type on the symbol table
+                                callParamType = None
+                                for j in range(len(symTable)):
+                                    sym1 = symTable[j]
+                                    if callParams[i+1] == sym1['name']:#as I am skipping the name of the parameters I have to add 1 to the index to get the name of the parameter I'm analysing at the moment
+                                        callParamType = sym1['type']
+                                        break
+                                if callParamType != None:# that means I found the IDE parameter on the symTable, and have it's type to compare with the function declaration
+                                    if callParamType != paramF:
+                                        return callParams[i+1], paramF#callParamType was supposed to be type paramF
+                                else: return 'parameters are not declared', callParams[i+1]
+                    return 'parameters are equal', None
+        return None, None
+
     
     #it returns the rule of the value, if it is a constant, a variable, registro, etc.
     def get_rule(self, varName, scope):
