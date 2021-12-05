@@ -382,7 +382,7 @@ class Parser:
             self.conteudo()
         elif self.current_char[2] == 'constantes':
             self.next_char()
-            self.constantes()
+            self.constantes(True)
             self.next_char()
             self.conteudo()
             return True
@@ -1037,8 +1037,6 @@ class Parser:
             else:
                 #
                 resulta, resultb = self.are_parameters_equal(funcName, params)
-                #print(resulta, resultb)
-                print(resulta, resultb)
                 if resulta == 'number of parameters does not match':
                     self.smt_err(self.current_char[0], funcName, ' The number of parameters does not match the function declaration')
                 elif resulta == 'parameters are not declared':

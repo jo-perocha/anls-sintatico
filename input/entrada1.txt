@@ -1,5 +1,5 @@
 variaveis{inteiro a = 3;}
-constantes{inteiro x = 2;}
+constantes{inteiro x = b;}
 funcao inteiro func(inteiro w, real b){
     w = 3;
     variaveis {
@@ -8,8 +8,11 @@ funcao inteiro func(inteiro w, real b){
     c = 3;
     x = 2;
 }
-funcao inteiro func(real b, inteiro w){
+funcao inteiro func(inteiro w, real b){
     a = 4;
+}
+funcao inteiro func(inteiro b, real l){
+    l = 7;
 }
 algoritmo {
     variaveis {

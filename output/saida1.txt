@@ -1,20 +1,24 @@
 
+Semantic Error: line: 2, Constants can only be declared with an explicit value. Invalid 'b'
 Semantic Error: line: 6, Two variables cannot be declared with the same name  'w'
 Semantic Error: line: 8, Variable not declared 'c'
 Semantic Error: line: 9, The value of constants cannot be changed 'x'
 Semantic Error: line: 10, No return statement in the function 'func'
+Semantic Error: line: 11, Two functions cannot be declared with the same name, return type and parameters 'func'
 Semantic Error: line: 13, No return statement in the function 'func'
-Semantic Error: line: 17, Two variables cannot be declared with the same name  'j'
-Semantic Error: line: 18, Two variables cannot be declared with the same name  'k'
-Semantic Error: line: 19, Invalid type attribution '2'
-Semantic Error: line: 21, Two variables cannot be declared with the same name  'nome'
-Semantic Error: line: 24, Two variables cannot be declared with the same name  'pontos'
-Semantic Error: line: 26, The value of constants cannot be changed 'x'
-Semantic Error: line: 27, Variable not declared 'l'
-Semantic Error: line: 28, Varibale not declared  'm'
-Semantic Error: line: 29, Variable not declared 'w'
-Semantic Error: line: 30, Assigned value ("som") must be of type: inteiro
-Semantic Error: line: 31, Function not declared 'test'
-Semantic Error: line: 34, Assigned value (1) must be of type: cadeia
-Semantic Error: line: 36, The number of parameters does not match the function declaration 'func'
-Semantic Error: line: 37, Parameter 'nome' is supposed to be of the type: 'inteiro' 'func'
+Semantic Error: line: 15, Assigned value (7) must be of type: real
+Semantic Error: line: 16, No return statement in the function 'func'
+Semantic Error: line: 20, Two variables cannot be declared with the same name  'j'
+Semantic Error: line: 21, Two variables cannot be declared with the same name  'k'
+Semantic Error: line: 22, Invalid type attribution '2'
+Semantic Error: line: 24, Two variables cannot be declared with the same name  'nome'
+Semantic Error: line: 27, Two variables cannot be declared with the same name  'pontos'
+Semantic Error: line: 29, The value of constants cannot be changed 'x'
+Semantic Error: line: 30, Variable not declared 'l'
+Semantic Error: line: 31, Varibale not declared  'm'
+Semantic Error: line: 32, Variable not declared 'w'
+Semantic Error: line: 33, Assigned value ("som") must be of type: inteiro
+Semantic Error: line: 34, Function not declared 'test'
+Semantic Error: line: 37, Assigned value (1) must be of type: cadeia
+Semantic Error: line: 39, The number of parameters does not match the function declaration 'func'
+Semantic Error: line: 40, Parameter 'nome' is supposed to be of the type: 'inteiro' 'func'
